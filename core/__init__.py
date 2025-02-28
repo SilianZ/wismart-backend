@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.requests import Request
 from contextlib import asynccontextmanager
 from core.orm import *
 from core.classes import *
@@ -128,3 +129,30 @@ async def _(request: UserLoginRequest) -> JSONResponse:
     return JSONResponse(
         Response(success=False, message="用户名或密码错误！").model_dump()
     )
+
+@app.post("/api/user/logout")
+async def _(request: Request) -> JSONResponse:
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return JSONResponse(Response(success=False, message="未登录！").model_dump())
+    user = get_user_login_by_cookie(cookie)
+    if not user:
+        return JSONResponse(Response(success=False, message="未登录！").model_dump())
+    result = remove_user_login(user)
+    if not result:
+        return JSONResponse(Response(success=False, message="登出失败！").model_dump())
+    response = JSONResponse(Response(success=True, message="登出成功！").model_dump())
+    response.delete_cookie("WISMARTCOOKIE")
+    return response
+
+@app.post("/api/user/verify_login")
+async def _(request: Request) -> Response:
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return Response(success=True, data=False)
+    user = get_user_login_by_cookie(cookie)
+    if not user:
+        return Response(success=True, data=False)
+    if user.time < int(datetime.now().timestamp()):
+        return Response(success=True, data=False)
+    return Response(success=True, data=True)
