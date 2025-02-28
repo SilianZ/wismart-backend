@@ -85,6 +85,7 @@ def create_user_login(user: UserLogins) -> bool:
     except Exception:
         return False
 
+
 def remove_user_login(user: UserLogins) -> bool:
     try:
         with Session(engine) as session:
@@ -93,10 +94,14 @@ def remove_user_login(user: UserLogins) -> bool:
             return True
     except Exception:
         return False
-    
+
+
 def get_user_login_by_cookie(cookie: str) -> Union[UserLogins, None]:
     with Session(engine) as session:
-        return session.exec(select(UserLogins).where(UserLogins.cookie == cookie)).first()
+        return session.exec(
+            select(UserLogins).where(UserLogins.cookie == cookie)
+        ).first()
+
 
 def remove_temporary_user(user: TempUser) -> None:
     try:

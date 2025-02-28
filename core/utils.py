@@ -12,11 +12,9 @@ def verify_turnstile_token(token: str) -> bool:
                 json={"secret": secret, "response": token},
             )
             data = response.json()
-            print(data)
             if data["success"]:
                 return True
             else:
                 return False
-    except Exception as e:
-        print(e)
+    except Exception:
         return False

@@ -130,6 +130,7 @@ async def _(request: UserLoginRequest) -> JSONResponse:
         Response(success=False, message="用户名或密码错误！").model_dump()
     )
 
+
 @app.post("/api/user/logout")
 async def _(request: Request) -> JSONResponse:
     cookie = request.cookies.get("WISMARTCOOKIE")
@@ -144,6 +145,7 @@ async def _(request: Request) -> JSONResponse:
     response = JSONResponse(Response(success=True, message="登出成功！").model_dump())
     response.delete_cookie("WISMARTCOOKIE")
     return response
+
 
 @app.post("/api/user/verify_login")
 async def _(request: Request) -> Response:
