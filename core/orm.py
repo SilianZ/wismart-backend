@@ -28,7 +28,7 @@ class UserLogins(SQLModel, table=True):
     cookie: str
     time: int
 
-sqlite_url = os.getenv("DATABASE_URL") or ""
+sqlite_url = os.getenv("DATABASE_URL") or "sqlite:///test.db"
 engine = create_engine(sqlite_url)
 
 

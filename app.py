@@ -1,5 +1,8 @@
 from core.orm import create_db_and_tables
+from core import app
 import uvicorn
+
+app = app
 
 if __name__ == "__main__":
     create_db_and_tables()
