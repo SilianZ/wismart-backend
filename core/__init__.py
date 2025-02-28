@@ -123,7 +123,7 @@ async def _(request: UserLoginRequest) -> JSONResponse:
             return JSONResponse(
                 Response(success=False, message="登陆失败！").model_dump()
             )
-        response.set_cookie("WISMARTCOOKIE", cookie, expires=3600)
+        response.set_cookie("WISMARTCOOKIE", cookie, expires="1d")
         return response
     return JSONResponse(
         Response(success=False, message="用户名或密码错误！").model_dump()
