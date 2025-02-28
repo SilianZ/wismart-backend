@@ -90,7 +90,7 @@ def send_verification_email(email: str, username: str, token: str) -> None:
                         <tbody>
                         <tr>
                             <td align="center">
-                            <a target="_blank" href="http://localhost:5173/user/verify?token={token}"
+                            <a target="_blank" href="http://wismart.hfiuc.org/user/verify?token={token}"
                                 style="display: block; padding: 14px 25px; background-color: #fd7e14; color: #ffffff; font-family: 'Inter', sans-serif; font-size: 16px; text-decoration: none; border-radius: 30px;">
                                 验证
                             </a>
