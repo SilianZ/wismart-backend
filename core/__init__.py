@@ -49,6 +49,7 @@ async def _(request: UserRegisterRequest) -> Response:
         send_verification_email(request.email, request.username, token)
         return Response(success=True, message="用户创建成功！验证邮件已发送到您的邮箱。")
     except Exception as e:
+        print(e)
         return Response(success=False, message="创建用户失败！")
 
 @app.post("/api/user/verify_email")
