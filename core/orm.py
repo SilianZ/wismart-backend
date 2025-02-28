@@ -22,11 +22,13 @@ class TempUser(SQLModel, table=True):
     password: str
     token: str
 
+
 class UserLogins(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     email: str
     cookie: str
     time: int
+
 
 sqlite_url = os.getenv("DATABASE_URL") or "sqlite:///test.db"
 engine = create_engine(sqlite_url)
@@ -37,7 +39,6 @@ def create_db_and_tables() -> None:
 
 
 def create_temporary_user(user: TempUser) -> bool:
-    create_db_and_tables()
     with Session(engine) as session:
         existing_user = session.exec(
             select(User).where(User.email == user.email)
@@ -64,18 +65,8 @@ def create_temporary_user(user: TempUser) -> bool:
         )
         return True
 
+
 def create_user(user: User) -> bool:
-    create_db_and_tables()
-    try:
-        with Session(engine) as session:
-            session.add(user)
-            session.commit()
-            return True
-    except Exception:
-        return False
-    
-def create_user_login(user: UserLogins) -> bool:
-    create_db_and_tables()
     try:
         with Session(engine) as session:
             session.add(user)
@@ -84,8 +75,18 @@ def create_user_login(user: UserLogins) -> bool:
     except Exception:
         return False
 
+
+def create_user_login(user: UserLogins) -> bool:
+    try:
+        with Session(engine) as session:
+            session.add(user)
+            session.commit()
+            return True
+    except Exception:
+        return False
+
+
 def remove_temporary_user(user: TempUser) -> None:
-    create_db_and_tables()
     try:
         with Session(engine) as session:
             session.delete(user)
@@ -95,11 +96,10 @@ def remove_temporary_user(user: TempUser) -> None:
 
 
 def get_user_by_email(email: str) -> Union[User, None]:
-    create_db_and_tables()
     with Session(engine) as session:
         return session.exec(select(User).where(User.email == email)).first()
 
+
 def get_temp_user_by_token(token: str) -> Union[TempUser, None]:
-    create_db_and_tables()
     with Session(engine) as session:
         return session.exec(select(TempUser).where(TempUser.token == token)).first()
