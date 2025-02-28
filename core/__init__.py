@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from core.orm import *
 from core.classes import *
 from core.email import *
@@ -26,6 +26,10 @@ def password_hash(password: str) -> str:
 
 def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode(), hashed.encode())
+
+@app.get("/")
+async def _() -> RedirectResponse:
+    return RedirectResponse("https://wismart.hfiuc.org")
 
 @app.post("/api/user/register")
 async def _(request: UserRegisterRequest) -> Response:
