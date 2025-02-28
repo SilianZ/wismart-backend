@@ -57,7 +57,7 @@ async def _(request: UserRegisterRequest) -> Response:
     user = TempUser(
         email=request.email,
         username=request.username,
-        password=request.password,
+        password=password_hash(request.password),
         token=token,
     )
     try:
@@ -81,7 +81,7 @@ async def _(request: UserVerifyRequest) -> Response:
     new_user = User(
         username=user.username,
         email=user.email,
-        password=password_hash(user.password),
+        password=user.password,
     )
     result = create_user(new_user)
     if not result:
