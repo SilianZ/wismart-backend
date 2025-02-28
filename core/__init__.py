@@ -48,8 +48,7 @@ async def _(request: UserRegisterRequest) -> Response:
             return Response(success=False, message="用户已存在！")
         send_verification_email(request.email, request.username, token)
         return Response(success=True, message="用户创建成功！验证邮件已发送到您的邮箱。")
-    except Exception as e:
-        print(e)
+    except Exception:
         return Response(success=False, message="创建用户失败！")
 
 @app.post("/api/user/verify_email")
@@ -58,7 +57,6 @@ async def _(request: UserVerifyRequest) -> Response:
     if not user:
         return Response(success=False, message="令牌已过期！")
     remove_temporary_user(user)
-    salt = random.randint(100000, 999999)
     new_user = User(
         username=user.username,
         email=user.email,
