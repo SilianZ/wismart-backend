@@ -25,7 +25,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://localhost:5173", "https://wismart.hfiuc.org"],
+    allow_origins=["http://localhost:5173", "https://wismart.hfiuc.org"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -93,43 +93,46 @@ def _(request: UserVerifyRequest) -> Response:
 
 @app.post("/api/user/login")
 def _(request: UserLoginRequest) -> JSONResponse:
-    if not verify_turnstile_token(request.turnstileToken):
-        return JSONResponse(
-            Response(success=False, message="请通过人机验证！").model_dump()
-        )
-    user = get_user_by_email(request.email)
-    if not user:
-        return JSONResponse(
-            Response(success=False, message="用户未找到！").model_dump()
-        )
-    if verify_password(request.password, user.password):
-        response = JSONResponse(
-            Response(success=True, message="登录成功！").model_dump()
-        )
-        cookie = hashlib.md5(
-            (
-                user.password
-                + user.email
-                + user.username
-                + str(random.randint(100000, 999999))
-            ).encode()
-        ).hexdigest()
-        result = create_user_login(
-            UserLogin(
-                email=user.email,
-                cookie=cookie,
-                time=int((datetime.now() + timedelta(hours=1)).timestamp()),
-            )
-        )
-        if not result:
+    try:
+        if not verify_turnstile_token(request.turnstileToken):
             return JSONResponse(
-                Response(success=False, message="登陆失败！").model_dump()
+                Response(success=False, message="请通过人机验证！").model_dump()
             )
-        response.set_cookie("WISMARTCOOKIE", cookie, expires="1d")
-        return response
-    return JSONResponse(
-        Response(success=False, message="用户名或密码错误！").model_dump()
-    )
+        user = get_user_by_email(request.email)
+        if not user:
+            return JSONResponse(
+                Response(success=False, message="用户未找到！").model_dump()
+            )
+        if verify_password(request.password, user.password):
+            response = JSONResponse(
+                Response(success=True, message="登录成功！").model_dump()
+            )
+            cookie = hashlib.md5(
+                (
+                    user.password
+                    + user.email
+                    + user.username
+                    + str(random.randint(100000, 999999))
+                ).encode()
+            ).hexdigest()
+            result = create_user_login(
+                UserLogin(
+                    email=user.email,
+                    cookie=cookie,
+                    time=int((datetime.now() + timedelta(hours=1)).timestamp()),
+                )
+            )
+            if not result:
+                return JSONResponse(
+                    Response(success=False, message="登陆失败！").model_dump()
+                )
+            response.set_cookie("WISMARTCOOKIE", cookie, expires="1d")
+            return response
+        return JSONResponse(
+            Response(success=False, message="用户名或密码错误！").model_dump()
+        )
+    except Exception as e:
+        print(e)
 
 
 @app.get("/api/user/logout")
