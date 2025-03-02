@@ -93,46 +93,43 @@ def _(request: UserVerifyRequest) -> Response:
 
 @app.post("/api/user/login")
 def _(request: UserLoginRequest) -> JSONResponse:
-    try:
-        if not verify_turnstile_token(request.turnstileToken):
-            return JSONResponse(
-                Response(success=False, message="请通过人机验证！").model_dump()
-            )
-        user = get_user_by_email(request.email)
-        if not user:
-            return JSONResponse(
-                Response(success=False, message="用户未找到！").model_dump()
-            )
-        if verify_password(request.password, user.password):
-            response = JSONResponse(
-                Response(success=True, message="登录成功！").model_dump()
-            )
-            cookie = hashlib.md5(
-                (
-                    user.password
-                    + user.email
-                    + user.username
-                    + str(random.randint(100000, 999999))
-                ).encode()
-            ).hexdigest()
-            result = create_user_login(
-                UserLogin(
-                    email=user.email,
-                    cookie=cookie,
-                    time=int((datetime.now() + timedelta(hours=1)).timestamp()),
-                )
-            )
-            if not result:
-                return JSONResponse(
-                    Response(success=False, message="登陆失败！").model_dump()
-                )
-            response.set_cookie("WISMARTCOOKIE", cookie, expires="1d")
-            return response
+    if not verify_turnstile_token(request.turnstileToken):
         return JSONResponse(
-            Response(success=False, message="用户名或密码错误！").model_dump()
+            Response(success=False, message="请通过人机验证！").model_dump()
         )
-    except Exception as e:
-        print(e)
+    user = get_user_by_email(request.email)
+    if not user:
+        return JSONResponse(
+            Response(success=False, message="用户未找到！").model_dump()
+        )
+    if verify_password(request.password, user.password):
+        response = JSONResponse(
+            Response(success=True, message="登录成功！").model_dump()
+        )
+        cookie = hashlib.md5(
+            (
+                user.password
+                + user.email
+                + user.username
+                + str(random.randint(100000, 999999))
+            ).encode()
+        ).hexdigest()
+        result = create_user_login(
+            UserLogin(
+                email=user.email,
+                cookie=cookie,
+                time=int((datetime.now() + timedelta(hours=1)).timestamp()),
+            )
+        )
+        if not result:
+            return JSONResponse(
+                Response(success=False, message="登陆失败！").model_dump()
+            )
+        response.set_cookie("WISMARTCOOKIE", cookie, expires="1d")
+        return response
+    return JSONResponse(
+        Response(success=False, message="用户名或密码错误！").model_dump()
+    )
 
 
 @app.get("/api/user/logout")
@@ -163,13 +160,20 @@ def _(request: Request) -> Response:
         return Response(success=True, data=False)
     return Response(success=True, data=True)
 
+
 @app.post("/api/product/get")
 def _(request: ProductFetchRequest) -> Response:
-    if request.page < 1 or request.row < 1 or request.row > 50 or request.type not in ['book', 'clothing', 'electronics', 'food', 'other']:
+    if (
+        request.page < 1
+        or request.row < 1
+        or request.row > 50
+        or request.type not in ["book", "clothing", "electronics", "food", "other"]
+    ):
         return Response(success=False, message="参数错误！")
     products = get_products(request.page, request.row, request.type, request.keyword)
     print(products)
     return Response(success=True, data=products)
+
 
 @app.post("/api/product/new")
 def _(request: Request, body: ProductCreateRequest) -> Response:
@@ -181,6 +185,12 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
     user = get_user_login_by_cookie(cookie)
     if not user:
         return Response(success=False, message="未登录！")
+    types = get_product_types()
+    data = [type.type for type in types]
+    if body.type not in data:
+        return Response(success=False, message="无效的商品类型！")
+    if body.price < 1 or body.stock < 1:
+        return Response(success=False, message="价格或库存错误！")
     product = Product(
         name=body.name,
         type=body.type,
@@ -188,17 +198,20 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
         description=body.description,
         image=body.image,
         stock=body.stock,
-        ownerId=user.id
+        ownerId=user.id,
     )
     result = create_product(product)
     if not result:
         return Response(success=False, message="创建商品失败！")
     return Response(success=True, message="商品创建成功！")
 
-@app.post("/api/product/type/get")
+
+@app.get("/api/product/types")
 def _() -> Response:
     types = get_product_types()
-    return Response(success=True, data=types)
+    data = [type.type for type in types]
+    return Response(success=True, data=data)
+
 
 @app.get("/api/cos/credential")
 def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
@@ -209,9 +222,9 @@ def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
     if not user:
         return Response(success=False, message="未登录！")
     _, ext = os.path.splitext(body.fileName)
-    if ext not in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff']:
+    if ext not in ["jpg", "jpeg", "png", "gif", "bmp", "tiff"]:
         return Response(success=False, message="非法文件，禁止上传！")
-    
+
     credential = get_temp_cos_security_token(ext)
     if not credential:
         return Response(success=False, message="获取临时密钥失败！")
