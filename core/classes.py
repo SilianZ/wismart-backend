@@ -8,19 +8,16 @@ class UserRegisterRequest(BaseModel):
     username: str
     password: str
     turnstileToken: str
-    request: Request
 
 
 class UserVerifyRequest(BaseModel):
     token: str
-    request: Request
 
 
 class UserLoginRequest(BaseModel):
     email: str
     password: str
     turnstileToken: str
-    request: Request
 
 
 class ProductFetchRequest(BaseModel):
@@ -28,7 +25,6 @@ class ProductFetchRequest(BaseModel):
     row: int = 10
     type: Optional[str] = None
     keyword: Optional[str] = None
-    request: Request
 
 class ProductCreateRequest(BaseModel):
     name: str
@@ -37,12 +33,10 @@ class ProductCreateRequest(BaseModel):
     description: str
     image: str
     stock: int
-    request: Request
     turnstileToken: str
 
 class COSCredentialGenerateRequest(BaseModel):
     fileName: str
-    request: Request
 
 
 class Response(BaseModel):

@@ -169,22 +169,22 @@ def _(request: ProductFetchRequest) -> Response:
     return Response(success=True, data=products)
 
 @app.post("/api/product/new")
-def _(request: ProductCreateRequest) -> Response:
-    if not verify_turnstile_token(request.turnstileToken):
+def _(request: Request, body: ProductCreateRequest) -> Response:
+    if not verify_turnstile_token(body.turnstileToken):
         return Response(success=False, message="请通过人机验证！")
-    cookie = request.request.cookies.get("WISMARTCOOKIE")
+    cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=False, message="未登录！")
     user = get_user_login_by_cookie(cookie)
     if not user:
         return Response(success=False, message="未登录！")
     product = Product(
-        name=request.name,
-        type=request.type,
-        price=request.price,
-        description=request.description,
-        image=request.image,
-        stock=request.stock,
+        name=body.name,
+        type=body.type,
+        price=body.price,
+        description=body.description,
+        image=body.image,
+        stock=body.stock,
         ownerId=user.id
     )
     result = create_product(product)
@@ -198,14 +198,14 @@ def _() -> Response:
     return Response(success=True, data=types)
 
 @app.get("/api/cos/credential")
-def _(request: COSCredentialGenerateRequest) -> Response:
-    cookie = request.request.cookies.get("WISMARTCOOKIE")
+def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
+    cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=False, message="未登录！")
     user = get_user_login_by_cookie(cookie)
     if not user:
         return Response(success=False, message="未登录！")
-    _, ext = os.path.splitext(request.fileName)
+    _, ext = os.path.splitext(body.fileName)
     if ext not in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff']:
         return Response(success=False, message="非法文件，禁止上传！")
     
