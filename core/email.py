@@ -1,20 +1,16 @@
-import smtplib, ssl, os
+import smtplib, ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
-smtp_server = os.getenv("SMTP_SERVER") or ""
-sender_email = os.getenv("SMTP_EMAIL") or ""
-sender_password = os.getenv("SMTP_PASSWORD") or ""
-
+from core.env import *
 
 def send_verification_email(email: str, username: str, token: str) -> None:
     with smtplib.SMTP_SSL(
         smtp_server, 465, context=ssl.create_default_context()
     ) as server:
-        server.login(sender_email, sender_password)
+        server.login(smtp_email, smtp_password)
         message = MIMEMultipart("alternative")
         message["Subject"] = "[WisMart] 邮箱验证"
-        message["From"] = f"WisMart <{sender_email}>"
+        message["From"] = f"WisMart <{smtp_email}>"
         message["To"] = email
         mail_body = f"""
         <!DOCTYPE html>
@@ -151,4 +147,4 @@ def send_verification_email(email: str, username: str, token: str) -> None:
 
         part = MIMEText(mail_body, "html", "utf-8")
         message.attach(part)
-        server.sendmail(sender_email, email, message.as_string())
+        server.sendmail(smtp_email, email, message.as_string())

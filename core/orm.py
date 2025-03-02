@@ -1,10 +1,12 @@
-from sqlmodel import SQLModel, create_engine, Session, select, delete
+from sqlmodel import SQLModel, create_engine, Session, select
 from sqlmodel import Field
-from typing import Union
+from typing import Union, Optional, Sequence
 from core.scheduler import scheduler
+from core.env import *
 from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime, timedelta
-import os
+from pydantic import BaseModel
+
 
 
 class User(SQLModel, table=True):
@@ -23,15 +25,35 @@ class TempUser(SQLModel, table=True):
     token: str
 
 
-class UserLogins(SQLModel, table=True):
+class UserLogin(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     email: str
     cookie: str
     time: int
 
+class Product(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+    type: str
+    price: float
+    description: str
+    image: str
+    stock: int
+    sales: int = 0
+    isVerified: bool = False
+    ownerId: int | None
 
-sqlite_url = os.getenv("DATABASE_URL") or "sqlite:///test.db"
-engine = create_engine(sqlite_url)
+
+class ProductFetchResonse(BaseModel):
+    products: Sequence[Product]
+    maxPage: int
+    page: int
+
+class ProductType(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    type: str
+
+engine = create_engine(database_url)
 
 
 def create_db_and_tables() -> None:
@@ -41,10 +63,10 @@ def create_db_and_tables() -> None:
 def create_temporary_user(user: TempUser) -> bool:
     with Session(engine) as session:
         existing_user = session.exec(
-            select(User).where(User.email == user.email)
+            select(User).where(User.email == user.email or User.username == user.username)
         ).first()
         existing_temp_user = session.exec(
-            select(TempUser).where(TempUser.email == user.email)
+            select(TempUser).where(TempUser.email == user.email or TempUser.username == user.username)
         ).first()
         if existing_temp_user or existing_user:
             return False
@@ -76,7 +98,7 @@ def create_user(user: User) -> bool:
         return False
 
 
-def create_user_login(user: UserLogins) -> bool:
+def create_user_login(user: UserLogin) -> bool:
     try:
         with Session(engine) as session:
             session.add(user)
@@ -86,7 +108,7 @@ def create_user_login(user: UserLogins) -> bool:
         return False
 
 
-def remove_user_login(user: UserLogins) -> bool:
+def remove_user_login(user: UserLogin) -> bool:
     try:
         with Session(engine) as session:
             session.delete(user)
@@ -96,10 +118,10 @@ def remove_user_login(user: UserLogins) -> bool:
         return False
 
 
-def get_user_login_by_cookie(cookie: str) -> Union[UserLogins, None]:
+def get_user_login_by_cookie(cookie: str) -> Union[UserLogin, None]:
     with Session(engine) as session:
         return session.exec(
-            select(UserLogins).where(UserLogins.cookie == cookie)
+            select(UserLogin).where(UserLogin.cookie == cookie)
         ).first()
 
 
@@ -110,7 +132,7 @@ def remove_temporary_user(user: TempUser) -> None:
             session.commit()
     except Exception:
         pass
-
+ 
 
 def get_user_by_email(email: str) -> Union[User, None]:
     with Session(engine) as session:
@@ -120,3 +142,25 @@ def get_user_by_email(email: str) -> Union[User, None]:
 def get_temp_user_by_token(token: str) -> Union[TempUser, None]:
     with Session(engine) as session:
         return session.exec(select(TempUser).where(TempUser.token == token)).first()
+
+def get_products(page: int, row: int, type: Optional[str] = None, keyword: Optional[str] = None) -> ProductFetchResonse:
+    with Session(engine) as session:
+        query = select(Product).where(Product.isVerified == True)
+        if type:
+            query = query.where(Product.type == type)
+        if keyword:
+            query = query.where(keyword in Product.name or keyword in Product.description or keyword == str(Product.id))
+        return ProductFetchResonse(products=session.exec(query.offset((page - 1) * row).limit(row)).all(), maxPage=len(session.exec(select(Product)).all()) // row + 1, page=page)
+    
+def create_product(product: Product) -> bool:
+    try:
+        with Session(engine) as session:
+            session.add(product)
+            session.commit()
+            return True
+    except Exception:
+        return False
+    
+def get_product_types() -> Sequence[ProductType]:
+    with Session(engine) as session:
+        return session.exec(select(ProductType)).all()
