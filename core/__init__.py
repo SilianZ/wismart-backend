@@ -169,7 +169,7 @@ def _(request: Request) -> Response:
 @app.post("/api/product/get")
 def _(request: ProductFetchRequest) -> Response:
     if (
-        request.page < 1
+        request.page < 0
         or request.row < 1
         or request.row > 50
         or request.type and request.type not in ["book", "clothing", "electronics", "food", "other"]
