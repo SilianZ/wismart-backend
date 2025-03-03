@@ -9,3 +9,4 @@ cos_bucket = os.getenv("COS_BUCKET")
 cos_region = os.getenv("COS_REGION")
 cos_secret_id = os.getenv("COS_SECRET_ID")
 cos_secret_key = os.getenv("COS_SECRET_KEY")
+fallback_img_url = os.getenv("FALLBACK_IMG_URL") or ""

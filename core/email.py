@@ -81,7 +81,7 @@ def send_verification_email(email: str, username: str, token: str) -> None:
                     style="padding: 40px; border: 1px solid #E6E6E6; border-radius: 7px; background-color: #FCFCFC;">
                     <p
                         style="font-family: 'Inter', sans-serif; color: #6B7280; font-size: 16px; line-height: 165%;">
-                        点击以下按钮完成验证。该验证邮件的有效期为 5 分钟。</p>
+                        点击以下按钮完成验证。</p>
                     <table class="ml-btn-container" cellpadding="0" cellspacing="0" border="0" align="center">
                         <tbody>
                         <tr>

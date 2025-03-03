@@ -1,6 +1,7 @@
 from core.env import *
 from typing import Any
 from sts.sts import Sts
+from qcloud_cos import CosS3Client
 from datetime import datetime
 import httpx
 import random
@@ -30,7 +31,9 @@ def get_temp_cos_security_token(ext: str) -> dict[str, Any] | None:
         return f"file/{today}/{file_name}"
 
     key = generate_cos_key(ext)
-    resource = f"qcs::cos:{cos_region}:uid/{str(cos_bucket).split('-')[1]}:{cos_bucket}/{key}"
+    resource = (
+        f"qcs::cos:{cos_region}:uid/{str(cos_bucket).split('-')[1]}:{cos_bucket}/{key}"
+    )
     credential_option = {
         "duration_seconds": 180,
         "secret_id": cos_secret_id,
@@ -70,5 +73,10 @@ def get_temp_cos_security_token(ext: str) -> dict[str, Any] | None:
         return None
 
 
-def get_presigned_url(key: str) -> str | None:
-    pass
+def get_presigned_url(key: str, cos_client: CosS3Client) -> str | None:
+    url = cos_client.get_presigned_download_url(
+        Bucket=cos_bucket,
+        Key=key,
+        Expired=120,
+    )
+    return url

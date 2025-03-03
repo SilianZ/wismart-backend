@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.requests import Request
 from contextlib import asynccontextmanager
+from qcloud_cos import CosConfig, CosS3Client
 from core.orm import *
 from core.classes import *
 from core.email import *
@@ -16,10 +17,8 @@ import bcrypt
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     print("Starting up...")
-    scheduler.start()
     create_db_and_tables()
     yield
-    scheduler.shutdown()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -172,6 +171,10 @@ def _(request: ProductFetchRequest) -> Response:
     ):
         return Response(success=False, message="参数错误！")
     products = get_products(request.page, request.row, request.type, request.keyword)
+    config = CosConfig(Region=cos_region, SecretId=cos_secret_id, SecretKey=cos_secret_key)
+    cos = CosS3Client(config)
+    for product in products.products:
+        product.image = get_presigned_url(product.image, cos) or ""
     print(products)
     return Response(success=True, data=products)
 
@@ -229,4 +232,6 @@ def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
     credential = get_temp_cos_security_token(ext)
     if not credential:
         return Response(success=False, message="获取临时密钥失败！")
-    return Response(success=True, data=credential)
+    return Response(
+        success=True, data={"region": cos_region, "bucket": cos_bucket, **credential}
+    )

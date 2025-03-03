@@ -1,7 +1,6 @@
 from sqlmodel import SQLModel, create_engine, Session, select
 from sqlmodel import Field
 from typing import Union, Optional, Sequence
-from core.scheduler import scheduler
 from core.env import *
 from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime, timedelta
@@ -72,19 +71,6 @@ def create_temporary_user(user: TempUser) -> bool:
             return False
         session.add(user)
         session.commit()
-        delete_time = datetime.now() + timedelta(minutes=5)
-        scheduler.add_job(
-            remove_temporary_user,
-            trigger=CronTrigger(
-                year=delete_time.year,
-                month=delete_time.month,
-                day=delete_time.day,
-                hour=delete_time.hour,
-                minute=delete_time.minute,
-                second=delete_time.second,
-            ),
-            args=[user],
-        )
         return True
 
 
