@@ -30,7 +30,7 @@ def get_temp_cos_security_token(ext: str) -> dict[str, Any] | None:
         return f"file/{today}/{file_name}"
 
     key = generate_cos_key(ext)
-    # resource = f"qcs::cos:{cos_region}:uid/{str(cos_bucket).split('-')[1]}:{cos_bucket}/{key}"
+    resource = f"qcs::cos:{cos_region}:uid/{str(cos_bucket).split('-')[1]}:{cos_bucket}/{key}"
     credential_option = {
         "duration_seconds": 180,
         "secret_id": cos_secret_id,
@@ -50,7 +50,7 @@ def get_temp_cos_security_token(ext: str) -> dict[str, Any] | None:
                         "name/cos:CompleteMultipartUpload",
                     ],
                     "effect": "allow",
-                    "resource": [key],
+                    "resource": [resource],
                     "condition": {
                         "string_like": {"cos:content-type": "image/*"},
                         "numeric_less_than_equal": {
@@ -64,7 +64,7 @@ def get_temp_cos_security_token(ext: str) -> dict[str, Any] | None:
     try:
         sts = Sts(credential_option)
         response: dict[str, Any] = sts.get_credential()
-        return {"key": key, **response}
+        return {"key": resource, **response}
     except Exception as e:
         print(e)
         return None
