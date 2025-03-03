@@ -169,13 +169,13 @@ def _(request: Request) -> Response:
 @app.post("/api/product/get")
 def _(request: ProductFetchRequest) -> Response:
     if (
-        request.page < 1
-        or request.row < 1
-        or request.row > 50
-        or request.type not in ["book", "clothing", "electronics", "food", "other"]
+        request.page and request.page < 1
+        or request.row and request.row < 1
+        or request.row and request.row > 50
+        or request.type and request.type not in ["book", "clothing", "electronics", "food", "other"]
     ):
         return Response(success=False, message="参数错误！")
-    products = get_products(request.page, request.row, request.type, request.keyword)
+    products = get_products(request.page or 1, request.row or 10, request.type, request.keyword)
     config = CosConfig(Region=cos_region, SecretId=cos_secret_id, SecretKey=cos_secret_key)
     cos = CosS3Client(config)
     for product in products.products:
