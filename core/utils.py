@@ -29,7 +29,8 @@ def get_temp_cos_security_token(ext: str) -> dict[str, Any] | None:
         file_name = f"{today}_{random_number}{'.' + ext if ext else ''}"
         return f"wismart/{today}/{file_name}"
 
-    cos_key = generate_cos_key(ext)
+    cos_key = f"qcs::cos:{cos_region}:uid/125000000:{cos_bucket}/{generate_cos_key(ext)}"
+    print(cos_key)
     credential_option = {
         "duration_seconds": 180,
         "secret_id": cos_secret_id,
