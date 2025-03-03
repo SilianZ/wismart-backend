@@ -128,6 +128,10 @@ def get_user_by_email(email: str) -> Union[User, None]:
 def get_temp_user_by_token(token: str) -> Union[TempUser, None]:
     with Session(engine) as session:
         return session.exec(select(TempUser).where(TempUser.token == token)).first()
+    
+def get_temp_user_by_email(email: str) -> Union[TempUser, None]:
+    with Session(engine) as session:
+        return session.exec(select(TempUser).where(TempUser.email == email)).first()
 
 def get_products(page: int, row: int, type: Optional[str] = None, keyword: Optional[str] = None) -> ProductFetchResonse:
     with Session(engine) as session:

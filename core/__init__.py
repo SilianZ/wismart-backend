@@ -98,9 +98,14 @@ def _(request: UserLoginRequest) -> JSONResponse:
             Response(success=False, message="请通过人机验证！").model_dump()
         )
     user = get_user_by_email(request.email)
+    temp_user = get_temp_user_by_email(request.email)
     if not user:
+        if not temp_user:
+            return JSONResponse(
+                Response(success=False, message="用户未找到！").model_dump()
+            )
         return JSONResponse(
-            Response(success=False, message="用户未找到！").model_dump()
+            Response(success=False, message="用户未验证！").model_dump()
         )
     if verify_password(request.password, user.password):
         response = JSONResponse(
