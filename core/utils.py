@@ -29,7 +29,7 @@ def get_temp_cos_security_token(ext: str) -> dict[str, Any] | None:
         file_name = f"{today}_{random_number}{'.' + ext if ext else ''}"
         return f"wismart/{today}/{file_name}"
 
-    cos_key = f"qcs::cos:{cos_region}:uid/125000000:{cos_bucket}/{generate_cos_key(ext)}"
+    cos_key = f"qcs::cos:{cos_region}:uid/{str(cos_bucket).split('-')[1]}:{cos_bucket}/{generate_cos_key(ext)}"
     print(cos_key)
     credential_option = {
         "duration_seconds": 180,
@@ -54,9 +54,7 @@ def get_temp_cos_security_token(ext: str) -> dict[str, Any] | None:
                     "condition": {
                         "string_like": {"cos:content-type": "image/*"},
                         "numeric_less_than_equal": {
-                            "cos:content-length": 5
-                            * 1024
-                            * 1024
+                            "cos:content-length": 5 * 1024 * 1024
                         },
                     },
                 }
@@ -71,6 +69,7 @@ def get_temp_cos_security_token(ext: str) -> dict[str, Any] | None:
     except Exception as e:
         print(e)
         return None
+
 
 def get_presigned_url(key: str) -> str | None:
     pass
