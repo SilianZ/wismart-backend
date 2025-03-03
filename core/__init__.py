@@ -169,9 +169,9 @@ def _(request: Request) -> Response:
 @app.post("/api/product/get")
 def _(request: ProductFetchRequest) -> Response:
     if (
-        request.page and request.page < 1
-        or request.row and request.row < 1
-        or request.row and request.row > 50
+        request.page < 1
+        or request.row < 1
+        or request.row > 50
         or request.type and request.type not in ["book", "clothing", "electronics", "food", "other"]
     ):
         return Response(success=False, message="参数错误！")

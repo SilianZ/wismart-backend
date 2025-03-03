@@ -20,8 +20,8 @@ class UserLoginRequest(BaseModel):
 
 
 class ProductFetchRequest(BaseModel):
-    page: Optional[int] = None
-    row: Optional[int] = None
+    page: int
+    row: int
     type: Optional[str] = None
     keyword: Optional[str] = None
 
