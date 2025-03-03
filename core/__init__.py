@@ -15,6 +15,7 @@ import bcrypt
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    print("Starting up...")
     scheduler.start()
     create_db_and_tables()
     yield
@@ -125,7 +126,7 @@ def _(request: UserLoginRequest) -> JSONResponse:
             return JSONResponse(
                 Response(success=False, message="登陆失败！").model_dump()
             )
-        response.set_cookie("WISMARTCOOKIE", cookie, expires="1d")
+        response.set_cookie("WISMARTCOOKIE", cookie, expires=3600)
         return response
     return JSONResponse(
         Response(success=False, message="用户名或密码错误！").model_dump()
