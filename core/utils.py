@@ -67,7 +67,8 @@ def get_temp_cos_security_token(ext: str) -> dict[str, Any] | None:
         response: dict[str, Any] = sts.get_credential()
         print(response)
         return {"Key": cos_key, **response}
-    except Exception:
+    except Exception as e:
+        print(e)
         return None
 
 def get_presigned_url(key: str) -> str | None:
