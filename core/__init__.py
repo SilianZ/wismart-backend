@@ -222,6 +222,7 @@ def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
     if not user:
         return Response(success=False, message="未登录！")
     _, ext = os.path.splitext(body.fileName)
+    print(ext)
     if ext not in ["jpg", "jpeg", "png", "gif", "bmp", "tiff"]:
         return Response(success=False, message="非法文件，禁止上传！")
 
