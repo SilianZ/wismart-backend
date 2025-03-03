@@ -27,7 +27,7 @@ def get_temp_cos_security_token(ext: str) -> dict[str, Any] | None:
         today = datetime.now().strftime("%Y%m%d")
         random_number = f"{random.randint(0, 999999):06d}"
         file_name = f"{today}_{random_number}{ext if ext else ''}"
-        return f"wismart/{today}/{file_name}"
+        return f"file/{today}/{file_name}"
 
     key = generate_cos_key(ext)
     resource = f"qcs::cos:{cos_region}:uid/{str(cos_bucket).split('-')[1]}:{cos_bucket}/{key}"
@@ -64,7 +64,7 @@ def get_temp_cos_security_token(ext: str) -> dict[str, Any] | None:
     try:
         sts = Sts(credential_option)
         response: dict[str, Any] = sts.get_credential()
-        return {"key": resource, **response}
+        return {"key": key, **response}
     except Exception as e:
         return None
 
