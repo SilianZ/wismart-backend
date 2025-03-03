@@ -213,7 +213,7 @@ def _() -> Response:
     return Response(success=True, data=data)
 
 
-@app.get("/api/cos/credential")
+@app.post("/api/cos/credential")
 def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
