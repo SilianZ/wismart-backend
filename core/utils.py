@@ -26,7 +26,7 @@ def get_temp_cos_security_token(ext: str) -> dict[str, Any] | None:
     def generate_cos_key(ext: str) -> str:
         today = datetime.now().strftime("%Y%m%d")
         random_number = f"{random.randint(0, 999999):06d}"
-        file_name = f"{today}_{random_number}{'.' + ext if ext else ''}"
+        file_name = f"{today}_{random_number}{ext if ext else ''}"
         return f"wismart/{today}/{file_name}"
 
     key = generate_cos_key(ext)
