@@ -186,7 +186,8 @@ def _(request: Request, body: ProductFetchRequest) -> Response:
         admin = verify_admin_by_email(user.email) if user else False
     types = [type.type for type in get_product_types()]
     if (
-        body.row < 1
+        body.page < 0
+        or body.row < 1
         or body.row > 50
         or body.type and body.type not in types
         or body.keyword and body.keyword == ""
