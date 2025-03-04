@@ -142,7 +142,7 @@ def get_products(page: int, row: int, type: Optional[str] = None, keyword: Optio
             query = query.where(Product.type == type)
         if keyword:
             query = query.where(keyword in Product.name or keyword in Product.description or keyword == str(Product.id))
-        return ProductFetchResonse(products=session.exec(query.offset((page - 1) * row).limit(row)).all(), maxPage=len(session.exec(select(Product)).all()) // row + 1, page=page)
+        return ProductFetchResonse(products=session.exec(query.offset(page * row).limit(row)).all(), maxPage=len(session.exec(select(Product)).all()) // row, page=page)
     
 def create_product(product: Product) -> bool:
     try:

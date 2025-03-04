@@ -193,7 +193,7 @@ def _(request: Request, body: ProductFetchRequest) -> Response:
         or body.keyword and body.keyword == ""
     ):
         return Response(success=False, message="参数错误！")
-    products = get_products(body.page or 1, body.row or 10, body.type, body.keyword, admin)
+    products = get_products(body.page, body.row, body.type, body.keyword, admin)
     config = CosConfig(Region=cos_region, SecretId=cos_secret_id, SecretKey=cos_secret_key)
     cos = CosS3Client(config)
     for product in products.products:
