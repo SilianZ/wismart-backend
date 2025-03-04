@@ -166,16 +166,34 @@ def _(request: Request) -> Response:
     return Response(success=True, data=True)
 
 
+@app.get("/api/user/verify_admin")
+def _(request: Request) -> Response:
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return Response(success=False, data=False)
+    user = get_user_login_by_cookie(cookie)
+    if not user:
+        return Response(success=False, data=False)
+    admin = verify_admin_by_email(user.email)
+    return Response(success=True, data=admin)
+
 @app.post("/api/product/get")
-def _(request: ProductFetchRequest) -> Response:
+def _(request: Request, body: ProductFetchRequest) -> Response:
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    admin = False
+    if cookie:
+        user = get_user_login_by_cookie(cookie)
+        admin = verify_admin_by_email(user.email) if user else False
+    types = [type.type for type in get_product_types()]
     if (
-        request.page < 0
-        or request.row < 1
-        or request.row > 50
-        or request.type and request.type not in ["book", "clothing", "electronics", "food", "other"]
+        body.page < 0
+        or body.row < 1
+        or body.row > 50
+        or body.type and body.type not in types
+        or body.keyword and body.keyword == ""
     ):
         return Response(success=False, message="参数错误！")
-    products = get_products(request.page or 1, request.row or 10, request.type, request.keyword)
+    products = get_products(body.page or 1, body.row or 10, body.type, body.keyword, admin)
     config = CosConfig(Region=cos_region, SecretId=cos_secret_id, SecretKey=cos_secret_key)
     cos = CosS3Client(config)
     for product in products.products:
@@ -217,9 +235,7 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
 
 @app.get("/api/product/types")
 def _() -> Response:
-    types = get_product_types()
-    data = [type.type for type in types]
-    return Response(success=True, data=data)
+    return Response(success=True, data=[type.type for type in get_product_types()])
 
 
 @app.post("/api/cos/credential")

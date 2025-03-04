@@ -133,9 +133,11 @@ def get_temp_user_by_email(email: str) -> Union[TempUser, None]:
     with Session(engine) as session:
         return session.exec(select(TempUser).where(TempUser.email == email)).first()
 
-def get_products(page: int, row: int, type: Optional[str] = None, keyword: Optional[str] = None) -> ProductFetchResonse:
+def get_products(page: int, row: int, type: Optional[str] = None, keyword: Optional[str] = None, admin: bool = False) -> ProductFetchResonse:
     with Session(engine) as session:
-        query = select(Product).where(Product.isVerified == True)
+        query = select(Product)
+        if not admin:
+            query = query.where(Product.isVerified == True)
         if type:
             query = query.where(Product.type == type)
         if keyword:
@@ -154,3 +156,8 @@ def create_product(product: Product) -> bool:
 def get_product_types() -> Sequence[ProductType]:
     with Session(engine) as session:
         return session.exec(select(ProductType)).all()
+    
+def verify_admin_by_email(email: str) -> bool:
+    with Session(engine) as session:
+        user = session.exec(select(User).where(User.email == email)).first()
+        return user.isAdmin if user else False
