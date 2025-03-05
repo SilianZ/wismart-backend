@@ -25,6 +25,7 @@ class ProductFetchRequest(BaseModel):
     type: Optional[str] = None
     keyword: Optional[str] = None
 
+
 class ProductCreateRequest(BaseModel):
     name: str
     type: str
@@ -33,6 +34,7 @@ class ProductCreateRequest(BaseModel):
     image: str
     stock: int
     turnstileToken: str
+
 
 class COSCredentialGenerateRequest(BaseModel):
     fileName: str
@@ -43,6 +45,7 @@ class ChangeProductRequest(BaseModel):
     isVerified: bool
     stock: int
     sales: int
+
 
 class Response(BaseModel):
     success: bool
