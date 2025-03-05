@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, create_engine, Session, select
+from sqlmodel import SQLModel, create_engine, Session, select, or_
 from sqlmodel import Field
 from typing import Union, Optional, Sequence
 from core.env import *
@@ -64,12 +64,12 @@ def create_temporary_user(user: TempUser) -> bool:
     with Session(engine) as session:
         existing_user = session.exec(
             select(User).where(
-                User.email == user.email or User.username == user.username
+                or_(User.email == user.email, User.username == user.username)
             )
         ).first()
         existing_temp_user = session.exec(
             select(TempUser).where(
-                TempUser.email == user.email or TempUser.username == user.username
+                or_(TempUser.email == user.email, TempUser.username == user.username)
             )
         ).first()
         if existing_temp_user or existing_user:
@@ -143,12 +143,9 @@ def get_products(
     row: int,
     type: Optional[str] = None,
     keyword: Optional[str] = None,
-    admin: bool = False,
 ) -> ProductFetchResonse:
     with Session(engine) as session:
         query = select(Product)
-        if not admin:
-            query = query.where(Product.isVerified == True)
         if type:
             query = query.where(Product.type == type)
         if keyword:
