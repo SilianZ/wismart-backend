@@ -291,15 +291,15 @@ def _(request: Request, body: ChangeProductRequest) -> Response:
     if not cookie:
         return Response(success=False, message="未登录！")
     login = get_user_login_by_cookie(cookie)
+    product = get_product_by_id(body.id)
+    if not product:
+        return Response(success=False, message="商品不存在！")
     user = get_user_by_email(login.email) if login else None
     if not user:
         return Response(success=False, message="未登录！")
     admin = verify_admin_by_email(user.email)
-    if not admin or body.id != user.id:
+    if not admin or product.ownerId != user.id:
         return Response(success=False, message="无访问权限！")
-    product = get_product_by_id(body.id)
-    if not product:
-        return Response(success=False, message="商品不存在！")
     if product.isVerified != body.isVerified and not admin:
         return Response(success=False, message="无访问权限！")
     result = change_product(product, body)
