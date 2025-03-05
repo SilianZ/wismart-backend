@@ -3,6 +3,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from core.env import *
 
+
 def send_verification_email(email: str, username: str, token: str) -> None:
     with smtplib.SMTP_SSL(
         smtp_server, 465, context=ssl.create_default_context()

@@ -38,6 +38,12 @@ class COSCredentialGenerateRequest(BaseModel):
     fileName: str
 
 
+class ChangeProductRequest(BaseModel):
+    id: int
+    isVerified: bool
+    stock: int
+    sales: int
+
 class Response(BaseModel):
     success: bool
     message: Optional[str] = None

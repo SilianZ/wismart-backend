@@ -8,6 +8,7 @@ from core.orm import *
 from core.classes import *
 from core.email import *
 from core.utils import *
+from datetime import datetime, timedelta
 import hashlib
 import random
 import os
@@ -177,6 +178,7 @@ def _(request: Request) -> Response:
     admin = verify_admin_by_email(user.email)
     return Response(success=True, data=admin)
 
+
 @app.post("/api/product/get")
 def _(request: Request, body: ProductFetchRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
@@ -189,16 +191,41 @@ def _(request: Request, body: ProductFetchRequest) -> Response:
         body.page < 0
         or body.row < 1
         or body.row > 50
-        or body.type and body.type not in types
-        or body.keyword and body.keyword == ""
+        or body.type
+        and body.type not in types
+        or body.keyword
+        and body.keyword == ""
     ):
         return Response(success=False, message="参数错误！")
     products = get_products(body.page, body.row, body.type, body.keyword, admin)
-    config = CosConfig(Region=cos_region, SecretId=cos_secret_id, SecretKey=cos_secret_key)
+    config = CosConfig(
+        Region=cos_region, SecretId=cos_secret_id, SecretKey=cos_secret_key
+    )
     cos = CosS3Client(config)
     for product in products.products:
         product.image = get_presigned_url(product.image, cos) or ""
     print(products)
+    return Response(success=True, data=products)
+
+
+@app.get("/api/product/all")
+def _(request: Request) -> Response:
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return Response(success=False, message="未登录！")
+    admin = False
+    if cookie:
+        user = get_user_login_by_cookie(cookie)
+        admin = verify_admin_by_email(user.email) if user else False
+    if not admin:
+        return Response(success=False, message="非管理员！")
+    products = get_all_products()
+    config = CosConfig(
+        Region=cos_region, SecretId=cos_secret_id, SecretKey=cos_secret_key
+    )
+    cos = CosS3Client(config)
+    for product in products:
+        product.image = get_presigned_url(product.image, cos) or ""
     return Response(success=True, data=products)
 
 
@@ -256,3 +283,22 @@ def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
     return Response(
         success=True, data={"region": cos_region, "bucket": cos_bucket, **credential}
     )
+
+
+@app.post("/api/product/change")
+def _(request: Request, body: ChangeProductRequest) -> Response:
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return Response(success=False, message="未登录！")
+    user = get_user_login_by_cookie(cookie)
+    if not user:
+        return Response(success=False, message="未登录！")
+    if not verify_admin_by_email(user.email) or body.id != user.id:
+        return Response(success=False, message="无访问权限！")
+    product = get_product_by_id(body.id)
+    if not product:
+        return Response(success=False, message="商品不存在！")
+    result = change_product(product, body)
+    if result:
+        return Response(success=True, message="成功！")
+    return Response(success=False, message="失败！")

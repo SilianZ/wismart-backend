@@ -2,10 +2,8 @@ from sqlmodel import SQLModel, create_engine, Session, select
 from sqlmodel import Field
 from typing import Union, Optional, Sequence
 from core.env import *
-from apscheduler.triggers.cron import CronTrigger
-from datetime import datetime, timedelta
 from pydantic import BaseModel
-
+from core.classes import *
 
 
 class User(SQLModel, table=True):
@@ -30,6 +28,7 @@ class UserLogin(SQLModel, table=True):
     cookie: str
     time: int
 
+
 class Product(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
@@ -48,9 +47,11 @@ class ProductFetchResonse(BaseModel):
     maxPage: int
     page: int
 
+
 class ProductType(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     type: str
+
 
 engine = create_engine(database_url)
 
@@ -62,10 +63,14 @@ def create_db_and_tables() -> None:
 def create_temporary_user(user: TempUser) -> bool:
     with Session(engine) as session:
         existing_user = session.exec(
-            select(User).where(User.email == user.email or User.username == user.username)
+            select(User).where(
+                User.email == user.email or User.username == user.username
+            )
         ).first()
         existing_temp_user = session.exec(
-            select(TempUser).where(TempUser.email == user.email or TempUser.username == user.username)
+            select(TempUser).where(
+                TempUser.email == user.email or TempUser.username == user.username
+            )
         ).first()
         if existing_temp_user or existing_user:
             return False
@@ -106,9 +111,7 @@ def remove_user_login(user: UserLogin) -> bool:
 
 def get_user_login_by_cookie(cookie: str) -> Union[UserLogin, None]:
     with Session(engine) as session:
-        return session.exec(
-            select(UserLogin).where(UserLogin.cookie == cookie)
-        ).first()
+        return session.exec(select(UserLogin).where(UserLogin.cookie == cookie)).first()
 
 
 def remove_temporary_user(user: TempUser) -> None:
@@ -118,7 +121,7 @@ def remove_temporary_user(user: TempUser) -> None:
             session.commit()
     except Exception:
         pass
- 
+
 
 def get_user_by_email(email: str) -> Union[User, None]:
     with Session(engine) as session:
@@ -128,12 +131,20 @@ def get_user_by_email(email: str) -> Union[User, None]:
 def get_temp_user_by_token(token: str) -> Union[TempUser, None]:
     with Session(engine) as session:
         return session.exec(select(TempUser).where(TempUser.token == token)).first()
-    
+
+
 def get_temp_user_by_email(email: str) -> Union[TempUser, None]:
     with Session(engine) as session:
         return session.exec(select(TempUser).where(TempUser.email == email)).first()
 
-def get_products(page: int, row: int, type: Optional[str] = None, keyword: Optional[str] = None, admin: bool = False) -> ProductFetchResonse:
+
+def get_products(
+    page: int,
+    row: int,
+    type: Optional[str] = None,
+    keyword: Optional[str] = None,
+    admin: bool = False,
+) -> ProductFetchResonse:
     with Session(engine) as session:
         query = select(Product)
         if not admin:
@@ -141,9 +152,18 @@ def get_products(page: int, row: int, type: Optional[str] = None, keyword: Optio
         if type:
             query = query.where(Product.type == type)
         if keyword:
-            query = query.where(keyword in Product.name or keyword in Product.description or keyword == str(Product.id))
-        return ProductFetchResonse(products=session.exec(query.offset(page * row).limit(row)).all(), maxPage=len(session.exec(select(Product)).all()) // row, page=page)
-    
+            query = query.where(
+                keyword in Product.name
+                or keyword in Product.description
+                or keyword == str(Product.id)
+            )
+        return ProductFetchResonse(
+            products=session.exec(query.offset(page * row).limit(row)).all(),
+            maxPage=len(session.exec(select(Product)).all()) // row,
+            page=page,
+        )
+
+
 def create_product(product: Product) -> bool:
     try:
         with Session(engine) as session:
@@ -152,12 +172,39 @@ def create_product(product: Product) -> bool:
             return True
     except Exception:
         return False
-    
+
+
 def get_product_types() -> Sequence[ProductType]:
     with Session(engine) as session:
         return session.exec(select(ProductType)).all()
-    
+
+
 def verify_admin_by_email(email: str) -> bool:
     with Session(engine) as session:
         user = session.exec(select(User).where(User.email == email)).first()
         return user.isAdmin if user else False
+
+
+def get_all_products() -> Sequence[Product]:
+    with Session(engine) as session:
+        return session.exec(select(Product)).all()
+
+
+def get_product_by_id(id: int) -> Union[Product, None]:
+    with Session(engine) as session:
+        return session.exec(select(Product).where(Product.id == id)).first()
+
+
+def change_product(product: Product, request: ChangeProductRequest) -> bool:
+    try:
+        with Session(engine) as session:
+            product.isVerified = request.isVerified
+            product.stock = request.stock
+            product.sales = request.sales
+            session.add(product)
+            session.commit()
+            session.refresh(product)
+            session.commit()
+            return True
+    except Exception:
+        return False
