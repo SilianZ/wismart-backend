@@ -159,10 +159,10 @@ def _(request: Request) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=True, data=False)
-    user = get_user_login_by_cookie(cookie)
-    if not user:
+    login = get_user_login_by_cookie(cookie)
+    if not login:
         return Response(success=True, data=False)
-    if user.time < int(datetime.now().timestamp()):
+    if login.time < int(datetime.now().timestamp()):
         return Response(success=True, data=False)
     return Response(success=True, data=True)
 
@@ -172,32 +172,27 @@ def _(request: Request) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=False, data=False)
-    user = get_user_login_by_cookie(cookie)
-    if not user:
+    login = get_user_login_by_cookie(cookie)
+    if not login:
         return Response(success=False, data=False)
-    admin = verify_admin_by_email(user.email)
+    admin = verify_admin_by_email(login.email)
     return Response(success=True, data=admin)
 
 
 @app.post("/api/product/get")
-def _(request: Request, body: ProductFetchRequest) -> Response:
-    cookie = request.cookies.get("WISMARTCOOKIE")
-    admin = False
-    if cookie:
-        user = get_user_login_by_cookie(cookie)
-        admin = verify_admin_by_email(user.email) if user else False
+def _(request: ProductFetchRequest) -> Response:
     types = [type.type for type in get_product_types()]
     if (
-        body.page < 0
-        or body.row < 1
-        or body.row > 50
-        or body.type
-        and body.type not in types
-        or body.keyword
-        and body.keyword == ""
+        request.page < 0
+        or request.row < 1
+        or request.row > 50
+        or request.type
+        and request.type not in types
+        or request.keyword
+        and request.keyword == ""
     ):
         return Response(success=False, message="参数错误！")
-    products = get_products(body.page, body.row, body.type, body.keyword, admin)
+    products = get_products(request.page, request.row, request.type, request.keyword)
     config = CosConfig(
         Region=cos_region, SecretId=cos_secret_id, SecretKey=cos_secret_key
     )
@@ -215,8 +210,11 @@ def _(request: Request) -> Response:
         return Response(success=False, message="未登录！")
     admin = False
     if cookie:
-        user = get_user_login_by_cookie(cookie)
-        admin = verify_admin_by_email(user.email) if user else False
+        login = get_user_login_by_cookie(cookie)
+        user = get_user_by_email(login.email) if login else None
+        if not user:
+            return Response(success=False, message="未登录！")
+        admin = verify_admin_by_email(user.email)
     if not admin:
         return Response(success=False, message="非管理员！")
     products = get_all_products()
@@ -236,7 +234,8 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=False, message="未登录！")
-    user = get_user_login_by_cookie(cookie)
+    login = get_user_login_by_cookie(cookie)
+    user = get_user_by_email(login.email) if login else None
     if not user:
         return Response(success=False, message="未登录！")
     types = get_product_types()
@@ -270,7 +269,8 @@ def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=False, message="未登录！")
-    user = get_user_login_by_cookie(cookie)
+    login = get_user_login_by_cookie(cookie)
+    user = get_user_by_email(login.email) if login else None
     if not user:
         return Response(success=False, message="未登录！")
     _, ext = os.path.splitext(body.fileName)
@@ -290,7 +290,8 @@ def _(request: Request, body: ChangeProductRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=False, message="未登录！")
-    user = get_user_login_by_cookie(cookie)
+    login = get_user_login_by_cookie(cookie)
+    user = get_user_by_email(login.email) if login else None
     if not user:
         return Response(success=False, message="未登录！")
     admin = verify_admin_by_email(user.email)
