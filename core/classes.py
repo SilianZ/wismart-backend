@@ -45,6 +45,7 @@ class ChangeProductRequest(BaseModel):
     isVerified: bool
     stock: int
     sales: int
+    details: str
 
 
 class Response(BaseModel):

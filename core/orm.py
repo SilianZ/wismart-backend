@@ -39,7 +39,7 @@ class Product(SQLModel, table=True):
     stock: int
     sales: int = 0
     isVerified: bool = False
-    ownerId: int | None
+    ownerId: int
     time: int
 
 
@@ -206,3 +206,8 @@ def change_product(product: Product, request: ChangeProductRequest) -> bool:
             return True
     except Exception:
         return False
+
+
+def get_user_by_id(id: int) -> Union[User, None]:
+    with Session(engine) as session:
+        return session.exec(select(User).where(User.id == id)).first()

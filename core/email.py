@@ -149,3 +149,82 @@ def send_verification_email(email: str, username: str, token: str) -> None:
         part = MIMEText(mail_body, "html", "utf-8")
         message.attach(part)
         server.sendmail(smtp_email, email, message.as_string())
+
+def send_product_status_change_email(email: str, details: str) -> None:
+    with smtplib.SMTP_SSL(
+        smtp_server, 465, context=ssl.create_default_context()
+    ) as server:
+        server.login(smtp_email, smtp_password)
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "[WisMart] 商品状态更新"
+        message["From"] = f"WisMart <{smtp_email}>"
+        message["To"] = email
+        mail_body = f"""
+        <!DOCTYPE html>
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <body>
+        <tbody>
+        <tr>
+            <td align="center" valign="top">
+            <table class="container" align="center" width="640" cellpadding="0" cellspacing="0" border="0"
+                style="max-width: 640px;">
+                <tbody>
+                <tr>
+                    <td colspan="2" height="20"></td>
+                </tr>
+                <tr>
+                    <td align="center">
+                    <img src="https://www.hfiuc.org/icon512_rounded.png"
+                        alt="" width="111" class="logo" style="max-width: 111px; display: inline-block;">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <table class="container ml-default-border" width="640" align="center" bgcolor="#ffffff" border="0"
+                cellspacing="0" cellpadding="0" style="width: 640px; min-width: 640px;">
+                <tbody>
+                <tr>
+                    <td height="20"></td>
+                </tr>
+                <tr>
+                    <td align="center">
+                    <h4
+                        style="font-family: 'Inter', sans-serif; color: #f86238; font-size: 16px; font-weight: bold; text-align: center;">
+                        商品状态更新</h4>
+                    <h1
+                        style="font-family: 'Inter', sans-serif; color: #000000; font-size: 28px; font-weight: bold; text-align: center;">
+                        商品状态更新</h1>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <table class="container ml-default-border" width="640" bgcolor="#ffffff" align="center" border="0"
+                cellspacing="0" cellpadding="0" style="width: 640px; min-width: 640px;">
+                <tbody>
+                <tr>
+                    <td height="20"></td>
+                </tr>
+                <tr>
+                    <td align="center" style="padding: 0 50px;">
+                    <p
+                        style="font-family: 'Inter', sans-serif; color: #6B7280; font-size: 16px; line-height: 165%;">
+                        {details}
+                    </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td height="10"></td>
+                </tr>
+                </tbody>
+            </table>
+        </tr>
+        </tbody>
+        </body>
+        </html>
+        """
+
+        part= MIMEText(mail_body, "html", "utf-8")
+        message.attach(part)
+        server.sendmail(smtp_email, email, message.as_string())

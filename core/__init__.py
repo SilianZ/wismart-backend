@@ -233,7 +233,7 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
     data = [type.type for type in types]
     if body.type not in data:
         return Response(success=False, message="无效的商品类型！")
-    if body.price < 1 or body.stock < 1:
+    if body.price < 1 or body.stock < -1 or body.stock == 0:
         return Response(success=False, message="价格或库存错误！")
     product = Product(
         name=body.name,
@@ -242,7 +242,7 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
         description=body.description,
         image=body.image,
         stock=body.stock,
-        ownerId=user.id,
+        ownerId=user.id or -1,
         time=int(datetime.now().timestamp()),
     )
     result = create_product(product)
@@ -287,6 +287,10 @@ def _(request: Request, body: ChangeProductRequest) -> Response:
     if product.isVerified != body.isVerified and not admin:
         return Response(success=False, message="无访问权限！")
     result = change_product(product, body)
+    owner = get_user_by_id(product.ownerId)
+    if not owner:
+        return Response(success=False, message="失败！")
     if result:
+        send_product_status_change_email(owner.email, body.details)
         return Response(success=True, message="成功！")
     return Response(success=False, message="失败！")
