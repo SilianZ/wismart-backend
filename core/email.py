@@ -215,6 +215,25 @@ def send_product_status_change_email(email: str, details: str, username: str) ->
                     </td>
                 </tr>
                 <tr>
+                    <td height="20"></td>
+                </tr>
+                </tbody>
+            </table>
+            <table class="container ml-default-border" width="640" bgcolor="#fd7e14" align="center" border="0"
+                cellspacing="0" cellpadding="0" style="width: 640px; min-width: 640px;">
+                <tbody>
+                <tr>
+                    <td height="10"></td>
+                </tr>
+                <tr>
+                    <td align="center">
+                    <p
+                        style="font-family: 'Inter', sans-serif; color: #ffffff; font-size: 14px; line-height: 150%;">
+                        © 2025 WisMart & MAKERs'。保留所有权利。
+                    </p>
+                    </td>
+                </tr>
+                <tr>
                     <td height="10"></td>
                 </tr>
                 </tbody>
