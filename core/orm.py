@@ -196,12 +196,14 @@ def get_product_by_id(id: int) -> Union[Product, None]:
 def change_product(product: Product, request: ChangeProductRequest) -> bool:
     try:
         with Session(engine) as session:
-            product.isVerified = request.isVerified
-            product.stock = request.stock
-            product.sales = request.sales
-            session.refresh(product)
-            session.commit()
-            return True
+            db_product = session.get(Product, product.id)
+            if db_product:
+                db_product.isVerified = request.isVerified
+                db_product.stock = request.stock
+                db_product.sales = request.sales
+                session.commit()
+                return True
+            return False
     except Exception:
         return False
 
