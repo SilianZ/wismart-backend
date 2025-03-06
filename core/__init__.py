@@ -43,6 +43,21 @@ def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode(), hashed.encode())
 
 
+def get_user_from_cookie(request: Request) -> User | None:
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return None
+    login = get_user_login_by_cookie(cookie)
+    if not login:
+        return None
+    return get_user_by_email(login.email)
+
+
+def verify_admin(request: Request) -> bool:
+    user = get_user_from_cookie(request)
+    return bool(user and verify_admin_by_email(user.email))
+
+
 @app.get("/")
 def _() -> RedirectResponse:
     return RedirectResponse("https://wismart.hfiuc.org")
@@ -140,13 +155,10 @@ def _(request: UserLoginRequest) -> JSONResponse:
 
 @app.get("/api/user/logout")
 def _(request: Request) -> JSONResponse:
-    cookie = request.cookies.get("WISMARTCOOKIE")
-    if not cookie:
+    user_login = get_user_login_by_cookie(request.cookies.get("WISMARTCOOKIE", ""))
+    if not user_login:
         return JSONResponse(Response(success=False, message="未登录！").model_dump())
-    user = get_user_login_by_cookie(cookie)
-    if not user:
-        return JSONResponse(Response(success=False, message="未登录！").model_dump())
-    result = remove_user_login(user)
+    result = remove_user_login(user_login)
     if not result:
         return JSONResponse(Response(success=False, message="登出失败！").model_dump())
     response = JSONResponse(Response(success=True, message="登出成功！").model_dump())
@@ -156,26 +168,18 @@ def _(request: Request) -> JSONResponse:
 
 @app.get("/api/user/verify_login")
 def _(request: Request) -> Response:
-    cookie = request.cookies.get("WISMARTCOOKIE")
-    if not cookie:
+    user = get_user_from_cookie(request)
+    if not user:
         return Response(success=True, data=False)
-    login = get_user_login_by_cookie(cookie)
-    if not login:
-        return Response(success=True, data=False)
-    if login.time < int(datetime.now().timestamp()):
+    login = get_user_login_by_cookie(user.email)
+    if not login or login.time < int(datetime.now().timestamp()):
         return Response(success=True, data=False)
     return Response(success=True, data=True)
 
 
 @app.get("/api/user/verify_admin")
 def _(request: Request) -> Response:
-    cookie = request.cookies.get("WISMARTCOOKIE")
-    if not cookie:
-        return Response(success=False, data=False)
-    login = get_user_login_by_cookie(cookie)
-    if not login:
-        return Response(success=False, data=False)
-    admin = verify_admin_by_email(login.email)
+    admin = verify_admin(request)
     return Response(success=True, data=admin)
 
 
@@ -205,16 +209,7 @@ def _(request: ProductFetchRequest) -> Response:
 
 @app.get("/api/product/all")
 def _(request: Request) -> Response:
-    cookie = request.cookies.get("WISMARTCOOKIE")
-    if not cookie:
-        return Response(success=False, message="未登录！")
-    admin = False
-    if cookie:
-        login = get_user_login_by_cookie(cookie)
-        user = get_user_by_email(login.email) if login else None
-        if not user:
-            return Response(success=False, message="未登录！")
-        admin = verify_admin_by_email(user.email)
+    admin = verify_admin(request)
     if not admin:
         return Response(success=False, message="非管理员！")
     products = get_all_products()
@@ -231,11 +226,7 @@ def _(request: Request) -> Response:
 def _(request: Request, body: ProductCreateRequest) -> Response:
     if not verify_turnstile_token(body.turnstileToken):
         return Response(success=False, message="请通过人机验证！")
-    cookie = request.cookies.get("WISMARTCOOKIE")
-    if not cookie:
-        return Response(success=False, message="未登录！")
-    login = get_user_login_by_cookie(cookie)
-    user = get_user_by_email(login.email) if login else None
+    user = get_user_from_cookie(request)
     if not user:
         return Response(success=False, message="未登录！")
     types = get_product_types()
@@ -252,6 +243,7 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
         image=body.image,
         stock=body.stock,
         ownerId=user.id,
+        time=int(datetime.now().timestamp()),
     )
     result = create_product(product)
     if not result:
@@ -266,11 +258,7 @@ def _() -> Response:
 
 @app.post("/api/cos/credential")
 def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
-    cookie = request.cookies.get("WISMARTCOOKIE")
-    if not cookie:
-        return Response(success=False, message="未登录！")
-    login = get_user_login_by_cookie(cookie)
-    user = get_user_by_email(login.email) if login else None
+    user = get_user_from_cookie(request)
     if not user:
         return Response(success=False, message="未登录！")
     _, ext = os.path.splitext(body.fileName)
@@ -287,22 +275,16 @@ def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
 
 @app.post("/api/product/change")
 def _(request: Request, body: ChangeProductRequest) -> Response:
-    cookie = request.cookies.get("WISMARTCOOKIE")
-    if not cookie:
+    user = get_user_from_cookie(request)
+    if not user:
         return Response(success=False, message="未登录！")
-    login = get_user_login_by_cookie(cookie)
     product = get_product_by_id(body.id)
     if not product:
         return Response(success=False, message="商品不存在！")
-    user = get_user_by_email(login.email) if login else None
-    if not user:
-        return Response(success=False, message="未登录！")
-    admin = verify_admin_by_email(user.email)
+    admin = verify_admin(request)
     if not admin and product.ownerId != user.id:
-        print(1)
         return Response(success=False, message="无访问权限！")
     if product.isVerified != body.isVerified and not admin:
-        print(2)
         return Response(success=False, message="无访问权限！")
     result = change_product(product, body)
     if result:

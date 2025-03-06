@@ -40,6 +40,7 @@ class Product(SQLModel, table=True):
     sales: int = 0
     isVerified: bool = False
     ownerId: int | None
+    time: int
 
 
 class ProductFetchResonse(BaseModel):
