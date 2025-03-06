@@ -291,6 +291,6 @@ def _(request: Request, body: ChangeProductRequest) -> Response:
     if not owner:
         return Response(success=False, message="失败！")
     if result:
-        send_product_status_change_email(owner.email, body.details)
+        send_product_status_change_email(owner.email, body.details, owner.username)
         return Response(success=True, message="成功！")
     return Response(success=False, message="失败！")

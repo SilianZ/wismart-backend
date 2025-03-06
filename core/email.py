@@ -150,7 +150,7 @@ def send_verification_email(email: str, username: str, token: str) -> None:
         message.attach(part)
         server.sendmail(smtp_email, email, message.as_string())
 
-def send_product_status_change_email(email: str, details: str) -> None:
+def send_product_status_change_email(email: str, details: str, username: str) -> None:
     with smtplib.SMTP_SSL(
         smtp_server, 465, context=ssl.create_default_context()
     ) as server:
@@ -191,7 +191,7 @@ def send_product_status_change_email(email: str, details: str) -> None:
                     <td align="center">
                     <h4
                         style="font-family: 'Inter', sans-serif; color: #f86238; font-size: 16px; font-weight: bold; text-align: center;">
-                        商品状态更新</h4>
+                        嘿，{username}！</h4>
                     <h1
                         style="font-family: 'Inter', sans-serif; color: #000000; font-size: 28px; font-weight: bold; text-align: center;">
                         商品状态更新</h1>
