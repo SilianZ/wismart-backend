@@ -223,7 +223,7 @@ def send_product_status_change_email(email: str, details: str, username: str) ->
                 cellspacing="0" cellpadding="0" style="width: 640px; min-width: 640px;">
                 <tbody>
                 <tr>
-                    <td height="10"></td>
+                    <td height="30"></td>
                 </tr>
                 <tr>
                     <td align="center">
