@@ -199,8 +199,6 @@ def change_product(product: Product, request: ChangeProductRequest) -> bool:
             product.isVerified = request.isVerified
             product.stock = request.stock
             product.sales = request.sales
-            session.add(product)
-            session.commit()
             session.refresh(product)
             session.commit()
             return True

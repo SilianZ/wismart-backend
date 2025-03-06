@@ -304,7 +304,9 @@ def _(request: Request, body: ChangeProductRequest) -> Response:
             return Response(success=False, message="无访问权限！")
         if product.isVerified != body.isVerified and not admin:
             return Response(success=False, message="无访问权限！")
+        print(1)
         result = change_product(product, body)
+        print(2)
         owner = get_user_by_id(product.ownerId)
         if not owner:
             return Response(success=False, message="失败！")
