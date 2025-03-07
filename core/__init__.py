@@ -216,7 +216,7 @@ def _(request: Request) -> Response:
             return Response(success=False, message="未登录！")
         admin = verify_admin_by_email(user.email)
     if not admin:
-        return Response(success=False, message="非管理员！")
+        return Response(success=False, message="无访问权限！")
     products = get_all_products()
     config = CosConfig(
         Region=cos_region, SecretId=cos_secret_id, SecretKey=cos_secret_key
@@ -288,33 +288,61 @@ def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
 
 @app.post("/api/product/change")
 def _(request: Request, body: ChangeProductRequest) -> Response:
-    try:
-        cookie = request.cookies.get("WISMARTCOOKIE")
-        if not cookie:
-            return Response(success=False, message="未登录！")
-        login = get_user_login_by_cookie(cookie)
-        product = get_product_by_id(body.id)
-        if not product:
-            return Response(success=False, message="商品不存在！")
-        user = get_user_by_email(login.email) if login else None
-        if not user:
-            return Response(success=False, message="未登录！")
-        admin = verify_admin_by_email(user.email)
-        if not admin and product.ownerId != user.id:
-            return Response(success=False, message="无访问权限！")
-        if product.isVerified != body.isVerified and not admin:
-            return Response(success=False, message="无访问权限！")
-        print(1)
-        result = change_product(product, body)
-        print(2)
-        owner = get_user_by_id(product.ownerId)
-        if not owner:
-            return Response(success=False, message="失败！")
-        if result:
-            send_product_status_change_email(owner.email, body.details, owner.username)
-            return Response(success=True, message="成功！")
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return Response(success=False, message="未登录！")
+    login = get_user_login_by_cookie(cookie)
+    product = get_product_by_id(body.id)
+    if not product:
+        return Response(success=False, message="商品不存在！")
+    user = get_user_by_email(login.email) if login else None
+    if not user:
+        return Response(success=False, message="未登录！")
+    admin = verify_admin_by_email(user.email)
+    if not admin and product.ownerId != user.id:
+        return Response(success=False, message="无访问权限！")
+    if product.isVerified != body.isVerified and not admin:
+        return Response(success=False, message="无访问权限！")
+    result = change_product(product, body)
+    owner = get_user_by_id(product.ownerId)
+    if not owner:
         return Response(success=False, message="失败！")
-    except Exception as e:
-        print(e)
-        return Response(success=False, message="失败！")
-    
+    if result:
+        send_product_status_change_email(owner.email, body.details, owner.username)
+        return Response(success=True, message="成功！")
+    return Response(success=False, message="失败！")
+
+@app.post("/api/product/types/remove")
+def _(request: Request, body: ProductTypeRemoveRequest):
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return Response(success=False, message="未登录！")
+    login = get_user_login_by_cookie(cookie)
+    user = get_user_by_email(login.email) if login else None
+    if not user:
+        return Response(success=False, message="未登录！")
+    admin = verify_admin_by_email(user.email)
+    if not admin:
+        return Response(success=False, message="无访问权限！")
+    result = remove_product_type_by_type(body.type)
+    if result:
+        return Response(success=True, message="成功！")
+    return Response(success=False, message="失败！")
+
+@app.post("/api/product/types/new")
+def _(request: Request, body: ProductTypeCreateRequest):
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return Response(success=False, message="未登录！")
+    login = get_user_login_by_cookie(cookie)
+    user = get_user_by_email(login.email) if login else None
+    if not user:
+        return Response(success=False, message="未登录！")
+    admin = verify_admin_by_email(user.email)
+    if not admin:
+        return Response(success=False, message="无访问权限！")
+    product_type = ProductType(type=body.type)
+    result = create_product_type(product_type)
+    if result:
+        return Response(success=True, message="成功！")
+    return Response(success=False, message="失败！")

@@ -35,6 +35,12 @@ class ProductCreateRequest(BaseModel):
     stock: int
     turnstileToken: str
 
+class ProductTypeRemoveRequest(BaseModel):
+    type: str
+
+class ProductTypeCreateRequest(BaseModel):
+    type: str
+
 
 class COSCredentialGenerateRequest(BaseModel):
     fileName: str

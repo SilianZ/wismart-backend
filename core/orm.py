@@ -211,3 +211,22 @@ def change_product(product: Product, request: ChangeProductRequest) -> bool:
 def get_user_by_id(id: int) -> Union[User, None]:
     with Session(engine) as session:
         return session.exec(select(User).where(User.id == id)).first()
+    
+def remove_product_type_by_type(type: str) -> bool:
+    try:
+        with Session(engine) as session:
+            product_type = session.exec(select(ProductType).where(ProductType.type == type)).first()
+            session.delete(product_type)
+            session.commit()
+            return True
+    except Exception:
+        return False
+
+def create_product_type(product_type: ProductType) -> bool:
+    try:
+        with Session(engine) as session:
+            session.add(product_type)
+            session.commit()
+            return True
+    except Exception:
+        return False
