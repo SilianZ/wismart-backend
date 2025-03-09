@@ -198,7 +198,7 @@ def _(request: ProductFetchRequest) -> Response:
     )
     cos = CosS3Client(config)
     for product in products.products:
-        product.image = get_presigned_url(product.image, cos) or ""
+        product.image = get_presigned_url(product.image, cos) or fallback_img_url
     print(products)
     return Response(success=True, data=products)
 
@@ -223,7 +223,7 @@ def _(request: Request) -> Response:
     )
     cos = CosS3Client(config)
     for product in products:
-        product.image = get_presigned_url(product.image, cos) or ""
+        product.image = get_presigned_url(product.image, cos) or fallback_img_url
     return Response(success=True, data=products)
 
 

@@ -151,9 +151,11 @@ def get_products(
             query = query.where(Product.type == type)
         if keyword:
             query = query.where(
-                keyword in Product.name
-                or keyword in Product.description
-                or keyword == str(Product.id)
+                or_(
+                    keyword in Product.name,
+                    keyword in Product.description,
+                    keyword == str(Product.id)
+                )
             )
         return ProductFetchResonse(
             products=session.exec(query.offset(page * row).limit(row)).all(),
