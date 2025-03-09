@@ -145,23 +145,27 @@ def get_products(
     type: Optional[str] = None,
     keyword: Optional[str] = None,
 ) -> ProductFetchResonse:
-    with Session(engine) as session:
-        query = select(Product)
-        if type:
-            query = query.where(Product.type == type)
-        if keyword:
-            query = query.where(
-                or_(
-                    keyword in Product.name,
-                    keyword in Product.description,
-                    keyword == str(Product.id)
+    try:
+        with Session(engine) as session:
+            query = select(Product)
+            if type:
+                query = query.where(Product.type == type)
+            if keyword:
+                query = query.where(
+                    or_(
+                        keyword in Product.name,
+                        keyword in Product.description,
+                        keyword == str(Product.id)
+                    )
                 )
+            return ProductFetchResonse(
+                products=session.exec(query.offset(page * row).limit(row)).all(),
+                maxPage=len(session.exec(select(Product)).all()) // row,
+                page=page,
             )
-        return ProductFetchResonse(
-            products=session.exec(query.offset(page * row).limit(row)).all(),
-            maxPage=len(session.exec(select(Product)).all()) // row,
-            page=page,
-        )
+        
+    except Exception as e:
+        print(e)
 
 
 def create_product(product: Product) -> bool:
