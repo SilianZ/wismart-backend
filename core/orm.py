@@ -165,6 +165,11 @@ def get_products(
             )
         
     except Exception as e:
+        return ProductFetchResonse(
+            products=[],
+            maxPage=1,
+            page=1
+        )
         print(e)
 
 
