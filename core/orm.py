@@ -154,7 +154,7 @@ def get_products(
             if keyword:
                 print(keyword)
                 query = query.where(
-                    keyword in Product.name
+                    Product.name.lower().find(keyword.lower()) != -1
                 )
             return ProductFetchResonse(
                 products=session.exec(query.offset(page * row).limit(row)).all(),
