@@ -153,7 +153,7 @@ def get_products(
                 query = query.where(Product.type == type)
             if keyword:
                 print(keyword)
-                query = query.where(
+                query = query.filter(
                     or_(
                         col("name").like("%{}%".format(keyword)),
                         col("description").like("%{}%".format(keyword)),
