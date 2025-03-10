@@ -192,13 +192,16 @@ def _(request: ProductFetchRequest) -> Response:
         and request.keyword == ""
     ):
         return Response(success=False, message="参数错误！")
-    products = get_products(request.page, request.row, request.type, request.keyword)
+    types = get_product_types()
+    products: Any = get_products(request.page, request.row, request.type, request.keyword)
+    type_dict = {type.id: type.type for type in types}
     config = CosConfig(
         Region=cos_region, SecretId=cos_secret_id, SecretKey=cos_secret_key
     )
     cos = CosS3Client(config)
     for product in products.products:
         product.image = get_presigned_url(product.image, cos) or fallback_img_url
+        product.type = type_dict.get(product.type, "未知")
     print(products)
     return Response(success=True, data=products)
 
