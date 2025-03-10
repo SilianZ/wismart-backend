@@ -242,7 +242,7 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
     data = [type.type for type in types]
     if body.type not in data:
         return Response(success=False, message="无效的商品类型！")
-    if body.price < 1 or body.stock < 1:
+    if body.price < 1 or (not body.isUnlimited and body.stock < 1):
         return Response(success=False, message="价格或库存错误！")
     product = Product(
         name=body.name,
@@ -250,7 +250,8 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
         price=body.price,
         description=body.description,
         image=body.image,
-        stock=body.stock or -1,
+        stock=body.stock if not body.isUnlimited else None,
+        isUnlimited=body.isUnlimited,
         ownerId=user.id or -1,
         time=int(datetime.now().timestamp())
     )

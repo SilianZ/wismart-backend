@@ -36,9 +36,10 @@ class Product(SQLModel, table=True):
     price: float
     description: str
     image: str
-    stock: int
+    stock: int | None
     sales: int = 0
     isVerified: bool = False
+    isUnlimited: bool = False
     ownerId: int
     time: int
 
@@ -147,7 +148,7 @@ def get_products(
 ) -> ProductFetchResonse:
     try:
         with Session(engine) as session:
-            query = select(Product)
+            query = select(Product).where(Product.isVerified == True)
             if type:
                 query = query.where(Product.type == type)
             if keyword:
@@ -165,12 +166,12 @@ def get_products(
             )
         
     except Exception as e:
+        print(e)
         return ProductFetchResonse(
             products=[],
             maxPage=1,
             page=1
         )
-        print(e)
 
 
 def create_product(product: Product) -> bool:

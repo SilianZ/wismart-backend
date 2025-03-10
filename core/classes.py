@@ -33,6 +33,7 @@ class ProductCreateRequest(BaseModel):
     description: str
     image: str
     stock: int
+    isUnlimited: bool
     turnstileToken: str
 
 class ProductTypeRemoveRequest(BaseModel):
