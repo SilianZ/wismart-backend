@@ -32,7 +32,7 @@ class UserLogin(SQLModel, table=True):
 class Product(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
-    type: str
+    type: int
     price: float
     description: str
     image: str

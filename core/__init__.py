@@ -217,13 +217,16 @@ def _(request: Request) -> Response:
         admin = verify_admin_by_email(user.email)
     if not admin:
         return Response(success=False, message="无访问权限！")
-    products = get_all_products()
+    types = get_product_types()
+    products: Any = get_all_products()
     config = CosConfig(
         Region=cos_region, SecretId=cos_secret_id, SecretKey=cos_secret_key
     )
     cos = CosS3Client(config)
+    type_dict = {type.id: type.type for type in types}
     for product in products:
         product.image = get_presigned_url(product.image, cos) or fallback_img_url
+        product.type = type_dict.get(product.type, "未知")
     return Response(success=True, data=products)
 
 
