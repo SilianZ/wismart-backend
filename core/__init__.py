@@ -245,7 +245,7 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
     if not user:
         return Response(success=False, message="未登录！")
     types = get_product_types()
-    data = [type.type for type in types]
+    data = [type.id for type in types]
     if body.type not in data:
         return Response(success=False, message="无效的商品类型！")
     if body.price < 1 or (not body.isUnlimited and (not body.stock or body.stock < 1)):
