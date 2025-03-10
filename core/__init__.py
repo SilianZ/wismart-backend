@@ -200,7 +200,7 @@ def _(request: ProductFetchRequest) -> Response:
     )
     cos = CosS3Client(config)
     for product in products.products:
-        product.image = get_presigned_url(product.image, cos) or fallback_img_url
+        product.image = get_presigned_url(product.image, cos) if product.image else fallback_img_url
         product.type = type_dict.get(product.type, "未知")
     print(products)
     return Response(success=True, data=products)
@@ -228,7 +228,7 @@ def _(request: Request) -> Response:
     cos = CosS3Client(config)
     type_dict = {type.id: type.type for type in types}
     for product in products:
-        product.image = get_presigned_url(product.image, cos) or fallback_img_url
+        product.image = get_presigned_url(product.image, cos) if product.image else fallback_img_url
         product.type = type_dict.get(product.type, "未知")
     return Response(success=True, data=products)
 

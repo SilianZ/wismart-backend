@@ -35,7 +35,7 @@ class Product(SQLModel, table=True):
     type: int
     price: float
     description: str
-    image: str
+    image: str | None
     stock: int | None
     sales: int = 0
     isVerified: bool = False

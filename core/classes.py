@@ -31,7 +31,7 @@ class ProductCreateRequest(BaseModel):
     type: int
     price: float
     description: str
-    image: str
+    image: str | None
     stock: int | None
     isUnlimited: bool
     turnstileToken: str
