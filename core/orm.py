@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, create_engine, Session, select, or_
+from sqlmodel import SQLModel, create_engine, Session, select, or_, col
 from sqlmodel import Field
 from typing import Union, Optional, Sequence
 from core.env import *
@@ -154,7 +154,11 @@ def get_products(
             if keyword:
                 print(keyword)
                 query = query.where(
-                    Product.name.lower().find(keyword.lower()) != -1
+                    or_(
+                        col(Product.name).like("%{}%".format(keyword)),
+                        col(Product.description).like("%{}%".format(keyword)),
+                        col(str(Product.id)).like("%{}%".format(keyword))
+                    )
                 )
             return ProductFetchResonse(
                 products=session.exec(query.offset(page * row).limit(row)).all(),
