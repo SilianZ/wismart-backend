@@ -28,16 +28,16 @@ class ProductFetchRequest(BaseModel):
 
 class ProductCreateRequest(BaseModel):
     name: str
-    type: str
+    type: int
     price: float
     description: str
     image: str
-    stock: int
+    stock: int | None
     isUnlimited: bool
     turnstileToken: str
 
 class ProductTypeRemoveRequest(BaseModel):
-    type: str
+    id: int
 
 class ProductTypeCreateRequest(BaseModel):
     type: str

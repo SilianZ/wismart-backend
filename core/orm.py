@@ -225,10 +225,10 @@ def get_user_by_id(id: int) -> Union[User, None]:
     with Session(engine) as session:
         return session.exec(select(User).where(User.id == id)).first()
     
-def remove_product_type_by_type(type: str) -> bool:
+def remove_product_type_by_id(id: int) -> bool:
     try:
         with Session(engine) as session:
-            product_type = session.exec(select(ProductType).where(ProductType.type == type)).first()
+            product_type = session.exec(select(ProductType).where(ProductType.id == id)).first()
             session.delete(product_type)
             session.commit()
             return True

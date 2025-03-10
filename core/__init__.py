@@ -242,7 +242,7 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
     data = [type.type for type in types]
     if body.type not in data:
         return Response(success=False, message="无效的商品类型！")
-    if body.price < 1 or (not body.isUnlimited and body.stock < 1):
+    if body.price < 1 or (not body.isUnlimited and (not body.stock or body.stock < 1)):
         return Response(success=False, message="价格或库存错误！")
     product = Product(
         name=body.name,
@@ -250,7 +250,7 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
         price=body.price,
         description=body.description,
         image=body.image,
-        stock=body.stock if not body.isUnlimited else None,
+        stock=body.stock,
         isUnlimited=body.isUnlimited,
         ownerId=user.id or -1,
         time=int(datetime.now().timestamp())
@@ -263,7 +263,7 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
 
 @app.get("/api/product/types")
 def _() -> Response:
-    return Response(success=True, data=[type.type for type in get_product_types()])
+    return Response(success=True, data=get_product_types())
 
 
 @app.post("/api/cos/credential")
@@ -325,7 +325,7 @@ def _(request: Request, body: ProductTypeRemoveRequest):
     admin = verify_admin_by_email(user.email)
     if not admin:
         return Response(success=False, message="无访问权限！")
-    result = remove_product_type_by_type(body.type)
+    result = remove_product_type_by_id(body.id)
     if result:
         return Response(success=True, message="成功！")
     return Response(success=False, message="失败！")
