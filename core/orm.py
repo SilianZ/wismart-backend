@@ -155,9 +155,9 @@ def get_products(
                 print(keyword)
                 query = query.where(
                     or_(
-                        col(Product.name).like("%{}%".format(keyword)),
-                        col(Product.description).like("%{}%".format(keyword)),
-                        col(str(Product.id)).like("%{}%".format(keyword))
+                        col("name").like("%{}%".format(keyword)),
+                        col("description").like("%{}%".format(keyword)),
+                        col("id").like("%{}%".format(keyword))
                     )
                 )
             return ProductFetchResonse(
