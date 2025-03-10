@@ -50,7 +50,7 @@ class COSCredentialGenerateRequest(BaseModel):
 class ChangeProductRequest(BaseModel):
     id: int
     isVerified: bool
-    stock: int
+    stock: int | None
     sales: int
     details: str
 

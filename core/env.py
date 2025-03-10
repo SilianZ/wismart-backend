@@ -1,6 +1,6 @@
 import os
 
-database_url = os.getenv("DATABASE_URL") or "sqlite:///data.db"
+database_url = os.getenv("DATABASE_URL") or "mysql+pymysql://WisMart:M95RYQUd1okqxpQE@154.37.213.151:3306/WisMart"
 smtp_server = os.getenv("SMTP_SERVER") or ""
 smtp_email = os.getenv("SMTP_EMAIL") or ""
 smtp_password = os.getenv("SMTP_PASSWORD") or ""
