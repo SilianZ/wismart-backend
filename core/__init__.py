@@ -181,7 +181,7 @@ def _(request: Request) -> Response:
 
 @app.post("/api/product/get")
 def _(request: ProductFetchRequest) -> Response:
-    types = [type.type for type in get_product_types()]
+    types = [type.id for type in get_product_types()]
     if (
         request.page < 0
         or request.row < 1
