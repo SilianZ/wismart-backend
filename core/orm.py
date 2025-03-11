@@ -143,7 +143,7 @@ def get_temp_user_by_email(email: str) -> Union[TempUser, None]:
 def get_products(
     page: int,
     row: int,
-    type: Optional[str] = None,
+    type: Optional[int] = None,
     keyword: Optional[str] = None,
 ) -> ProductFetchResonse:
     try:

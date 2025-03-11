@@ -22,7 +22,7 @@ class UserLoginRequest(BaseModel):
 class ProductFetchRequest(BaseModel):
     page: int
     row: int
-    type: Optional[str] = None
+    type: Optional[int] = None
     keyword: Optional[str] = None
 
 
