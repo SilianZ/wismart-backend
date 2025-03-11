@@ -373,6 +373,8 @@ def _(request: Request, body: ProductBuyRequest):
     product = get_product_by_id(body.id)
     if not product:
         return Response(success=False, message="无效的商品！")
+    if product.ownerId == buyer.id:
+        return Response(success=False, message="你不能自己购买自己的商品！")
     if product.stock and product.stock < body.count:
         return Response(success=False, message="无效的购买数量！")
     user = get_user_by_id(product.ownerId)
