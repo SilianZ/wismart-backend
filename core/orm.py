@@ -206,7 +206,7 @@ def get_product_by_id(id: int) -> Union[Product, None]:
         return session.exec(select(Product).where(Product.id == id)).first()
 
 
-def change_product(product: Product, request: ChangeProductRequest) -> bool:
+def change_product(product: Product, request: ProductChangeRequest) -> bool:
     try:
         with Session(engine) as session:
             db_product = session.get(Product, product.id)

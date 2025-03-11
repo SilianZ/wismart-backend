@@ -301,7 +301,7 @@ def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
 
 
 @app.post("/api/product/change")
-def _(request: Request, body: ChangeProductRequest) -> Response:
+def _(request: Request, body: ProductChangeRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=False, message="未登录！")
@@ -360,3 +360,26 @@ def _(request: Request, body: ProductTypeCreateRequest):
     if result:
         return Response(success=True, message="成功！")
     return Response(success=False, message="失败！")
+
+@app.post("/api/product/buy")
+def _(request: Request, body: ProductBuyRequest):
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return Response(success=False, message="未登录！")
+    login = get_user_login_by_cookie(cookie)
+    buyer = get_user_by_email(login.email) if login else None
+    if not buyer:
+        return Response(success=False, message="未登录！")
+    product = get_product_by_id(body.id)
+    if not product:
+        return Response(success=False, message="无效的商品！")
+    if product.stock and product.stock < body.count:
+        return Response(success=False, message="无效的购买数量！")
+    user = get_user_by_id(product.ownerId)
+    if not user:
+        return Response(success=False, message="无效的商品所有者！")
+    try:
+        send_product_sales_email(user.email, user.username, body.count, product.name, buyer.username)
+        return Response(success=True, message="成功！")
+    except Exception:
+        return Response(success=False, message="失败！")

@@ -51,12 +51,16 @@ class COSCredentialGenerateRequest(BaseModel):
     fileName: str
 
 
-class ChangeProductRequest(BaseModel):
+class ProductChangeRequest(BaseModel):
     id: int
     isVerified: bool
     stock: int | None
     sales: int
     details: str
+
+class ProductBuyRequest(BaseModel):
+    id: int
+    count: int
 
 
 class Response(BaseModel):
