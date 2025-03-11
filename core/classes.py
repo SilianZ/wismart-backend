@@ -19,6 +19,10 @@ class UserLoginRequest(BaseModel):
     turnstileToken: str
 
 
+class ProductDetailRequest(BaseModel):
+    id: int
+
+
 class ProductFetchRequest(BaseModel):
     page: int
     row: int

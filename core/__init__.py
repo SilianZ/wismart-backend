@@ -203,6 +203,18 @@ def _(request: ProductFetchRequest) -> Response:
     print(products)
     return Response(success=True, data=products)
 
+@app.post("/api/product/detail")
+def _(request: ProductDetailRequest) -> Response:
+    product = get_product_by_id(request.id)
+    if not product:
+        return Response(success=False, message="无效的商品！")
+    config = CosConfig(
+        Region=cos_region, SecretId=cos_secret_id, SecretKey=cos_secret_key
+    )
+    cos = CosS3Client(config)
+    product.image = get_presigned_url(product.image, cos) if product.image else fallback_img_url
+    return Response(success=True, data=product)
+
 
 @app.get("/api/product/all")
 def _(request: Request) -> Response:
