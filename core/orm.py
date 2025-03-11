@@ -203,7 +203,7 @@ def get_all_products() -> Sequence[Product]:
 
 def get_product_by_id(id: int) -> Union[Product, None]:
     with Session(engine) as session:
-        return session.exec(select(Product).where(Product.id == id)).first()
+        return session.exec(select(Product).where(Product.id == id).where(Product.isVerified == True)).first()
 
 
 def change_product(product: Product, request: ProductChangeRequest) -> bool:
