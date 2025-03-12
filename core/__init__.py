@@ -363,6 +363,8 @@ def _(request: Request, body: ProductTypeCreateRequest):
 
 @app.post("/api/product/buy")
 def _(request: Request, body: ProductBuyRequest):
+    if not verify_turnstile_token(body.turnstileToken):
+        return Response(success=False, message="请通过人机验证！")
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=False, message="未登录！")

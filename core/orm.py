@@ -228,7 +228,7 @@ def get_product_by_id(id: int, verified: bool) -> Union[Product, None]:
     with Session(engine) as session:
         query = select(Product).where(Product.id == id)
         if verified:
-            query.where(Product.isVerified == True)
+            query = query.where(Product.isVerified == True)
         return session.exec(query).first()
 
 

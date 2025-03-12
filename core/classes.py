@@ -60,6 +60,7 @@ class ProductChangeRequest(BaseModel):
 
 class ProductBuyRequest(BaseModel):
     id: int
+    turnstileToken: str
     count: int
 
 
