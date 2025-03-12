@@ -205,7 +205,7 @@ def _(request: ProductFetchRequest) -> Response:
 
 @app.post("/api/product/detail")
 def _(request: ProductDetailRequest) -> Response:
-    product = get_product_by_id(request.id)
+    product = get_product_by_id(request.id, True)
     if not product:
         return Response(success=False, message="无效的商品！")
     config = CosConfig(
@@ -306,17 +306,17 @@ def _(request: Request, body: ProductChangeRequest) -> Response:
     if not cookie:
         return Response(success=False, message="未登录！")
     login = get_user_login_by_cookie(cookie)
-    product = get_product_by_id(body.id)
+    product = get_product_by_id(body.id, False)
     if not product:
-        return Response(success=False, message="商品不存在！")
+        return Response(success=False, message="商品不存在或无访问权限！")
     user = get_user_by_email(login.email) if login else None
     if not user:
         return Response(success=False, message="未登录！")
     admin = verify_admin_by_email(user.email)
     if not admin and product.ownerId != user.id:
-        return Response(success=False, message="无访问权限！")
+        return Response(success=False, message="商品不存在或无访问权限！")
     if product.isVerified != body.isVerified and not admin:
-        return Response(success=False, message="无访问权限！")
+        return Response(success=False, message="商品不存在或无访问权限！")
     result = change_product(product, body)
     owner = get_user_by_id(product.ownerId)
     if not owner:
@@ -370,7 +370,7 @@ def _(request: Request, body: ProductBuyRequest):
     buyer = get_user_by_email(login.email) if login else None
     if not buyer:
         return Response(success=False, message="未登录！")
-    product = get_product_by_id(body.id)
+    product = get_product_by_id(body.id, True)
     if not product:
         return Response(success=False, message="无效的商品！")
     if product.ownerId == buyer.id:

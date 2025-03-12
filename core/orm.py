@@ -103,7 +103,8 @@ def create_temporary_user(user: TempUser) -> bool:
                 second=delete_time.second,
             ),
             args=[user],
-         )
+        )
+        scheduler.start()
         return True
 
 
@@ -183,7 +184,7 @@ def get_products(
                     or_(
                         column("name").like("%{}%".format(keyword)),
                         column("description").like("%{}%".format(keyword)),
-                        column("id").like("%{}%".format(keyword))
+                        column("id").like("%{}%".format(keyword)),
                     )
                 )
             return ProductFetchResonse(
@@ -191,14 +192,10 @@ def get_products(
                 maxPage=len(session.exec(select(Product)).all()) // row,
                 page=page,
             )
-        
+
     except Exception as e:
         print(e)
-        return ProductFetchResonse(
-            products=[],
-            maxPage=1,
-            page=1
-        )
+        return ProductFetchResonse(products=[], maxPage=1, page=1)
 
 
 def create_product(product: Product) -> bool:
@@ -227,9 +224,12 @@ def get_all_products() -> Sequence[Product]:
         return session.exec(select(Product)).all()
 
 
-def get_product_by_id(id: int) -> Union[Product, None]:
+def get_product_by_id(id: int, verified: bool) -> Union[Product, None]:
     with Session(engine) as session:
-        return session.exec(select(Product).where(Product.id == id).where(Product.isVerified == True)).first()
+        query = select(Product).where(Product.id == id)
+        if verified:
+            query.where(Product.isVerified == True)
+        return session.exec(query).first()
 
 
 def change_product(product: Product, request: ProductChangeRequest) -> bool:
@@ -250,16 +250,20 @@ def change_product(product: Product, request: ProductChangeRequest) -> bool:
 def get_user_by_id(id: int) -> Union[User, None]:
     with Session(engine) as session:
         return session.exec(select(User).where(User.id == id)).first()
-    
+
+
 def remove_product_type_by_id(id: int) -> bool:
     try:
         with Session(engine) as session:
-            product_type = session.exec(select(ProductType).where(ProductType.id == id)).first()
+            product_type = session.exec(
+                select(ProductType).where(ProductType.id == id)
+            ).first()
             session.delete(product_type)
             session.commit()
             return True
     except Exception:
         return False
+
 
 def create_product_type(product_type: ProductType) -> bool:
     try:
