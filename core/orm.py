@@ -4,6 +4,9 @@ from typing import Union, Optional, Sequence
 from core.env import *
 from pydantic import BaseModel
 from core.classes import *
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+from datetime import datetime, timedelta
 
 
 class User(SQLModel, table=True):
@@ -55,6 +58,15 @@ class ProductType(SQLModel, table=True):
     type: str
 
 
+class Trade(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    buyerId: int
+    sellerId: str
+    buyerEmail: int
+    sellerEmail: str
+    productId: str
+
+
 engine = create_engine(database_url)
 
 
@@ -78,6 +90,20 @@ def create_temporary_user(user: TempUser) -> bool:
             return False
         session.add(user)
         session.commit()
+        delete_time = datetime.now() + timedelta(minutes=5)
+        scheduler = BackgroundScheduler()
+        scheduler.add_job(
+            remove_temporary_user,
+            trigger=CronTrigger(
+                year=delete_time.year,
+                month=delete_time.month,
+                day=delete_time.day,
+                hour=delete_time.hour,
+                minute=delete_time.minute,
+                second=delete_time.second,
+            ),
+            args=[user],
+         )
         return True
 
 

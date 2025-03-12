@@ -336,7 +336,7 @@ def send_verification_email(email: str, user: str, token: str) -> None:
                                                                                             <p class="t12"
                                                                                                 style="margin:0;Margin:0;font-family:Open Sans,BlinkMacSystemFont,Segoe UI,Helvetica Neue,Arial,sans-serif;line-height:25px;font-weight:400;font-style:normal;font-size:15px;text-decoration:none;text-transform:none;letter-spacing:-0.1px;direction:ltr;color:#141414;text-align:left;mso-line-height-rule:exactly;mso-text-raise:3px;">
                                                                                                 你正在为 WisMart 用户 ${user}
-                                                                                                验证邮箱，</p>
+                                                                                                验证邮箱，该邮件 5 分钟内有效。</p>
                                                                                         </td>
                                                                                     </tr>
                                                                                 </table>
@@ -896,13 +896,13 @@ def send_product_status_change_email(email: str, details: str, user: str) -> Non
         message.attach(part)
         server.sendmail(smtp_email, email, message.as_string())
 
-def send_product_sales_email(email: str, user: str, count: int, product: str, buyer: str) -> None:
+def send_product_trade_email(email: str, user: str, count: int, product: str, buyer: str) -> None:
         with smtplib.SMTP_SSL(
             smtp_server, 465, context=ssl.create_default_context()
         ) as server:
             server.login(smtp_email, smtp_password)
             message = MIMEMultipart("alternative")
-            message["Subject"] = "[WisMart] 新的商品售出"
+            message["Subject"] = "[WisMart] 新的交易"
             message["From"] = f"WisMart <{smtp_email}>"
             message["To"] = email
             template = """
@@ -1196,7 +1196,7 @@ def send_product_sales_email(email: str, user: str, count: int, product: str, bu
                                                                                                 style="padding:0 0 18px 0;">
                                                                                                 <h1 class="t6"
                                                                                                     style="margin:0;Margin:0;font-family:Open Sans,BlinkMacSystemFont,Segoe UI,Helvetica Neue,Arial,sans-serif;line-height:28px;font-weight:700;font-style:normal;font-size:24px;text-decoration:none;text-transform:none;letter-spacing:-1px;direction:ltr;color:#141414;text-align:left;mso-line-height-rule:exactly;mso-text-raise:1px;">
-                                                                                                    嘿 ${user}！新的商品售卖</h1>
+                                                                                                    嘿 ${user}！新的交易</h1>
                                                                                             </td>
                                                                                         </tr>
                                                                                     </table>

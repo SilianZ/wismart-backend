@@ -381,7 +381,7 @@ def _(request: Request, body: ProductBuyRequest):
     if not user:
         return Response(success=False, message="无效的商品所有者！")
     try:
-        send_product_sales_email(user.email, user.username, body.count, product.name, buyer.username)
+        send_product_trade_email(user.email, user.username, body.count, product.name, buyer.username)
         return Response(success=True, message="成功！")
     except Exception:
         return Response(success=False, message="失败！")
