@@ -4,10 +4,7 @@ from typing import Union, Optional, Sequence
 from core.env import *
 from pydantic import BaseModel
 from core.classes import *
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
-from datetime import datetime, timedelta
-
+from datetime import datetime
 
 class User(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -23,6 +20,7 @@ class TempUser(SQLModel, table=True):
     username: str
     password: str
     token: str
+    expiry: int
 
 
 class UserLogin(SQLModel, table=True):
@@ -90,21 +88,6 @@ def create_temporary_user(user: TempUser) -> bool:
             return False
         session.add(user)
         session.commit()
-        delete_time = datetime.now() + timedelta(minutes=5)
-        scheduler = BackgroundScheduler()
-        scheduler.add_job(
-            remove_temporary_user,
-            trigger=CronTrigger(
-                year=delete_time.year,
-                month=delete_time.month,
-                day=delete_time.day,
-                hour=delete_time.hour,
-                minute=delete_time.minute,
-                second=delete_time.second,
-            ),
-            args=[user],
-        )
-        scheduler.start()
         return True
 
 
@@ -159,12 +142,12 @@ def get_user_by_email(email: str) -> Union[User, None]:
 
 def get_temp_user_by_token(token: str) -> Union[TempUser, None]:
     with Session(engine) as session:
-        return session.exec(select(TempUser).where(TempUser.token == token)).first()
+        return session.exec(select(TempUser).where(TempUser.token == token).where(TempUser.expiry >= datetime.now().timestamp())).first()
 
 
 def get_temp_user_by_email(email: str) -> Union[TempUser, None]:
     with Session(engine) as session:
-        return session.exec(select(TempUser).where(TempUser.email == email)).first()
+        return session.exec(select(TempUser).where(TempUser.email == email).where(TempUser.expiry >= datetime.now().timestamp())).first()
 
 
 def get_products(

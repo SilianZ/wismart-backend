@@ -62,6 +62,7 @@ def _(request: UserRegisterRequest) -> Response:
         username=request.username,
         password=password_hash(request.password),
         token=token,
+        expiry=int((datetime.now() + timedelta(minutes=5)).timestamp())
     )
     try:
         exist = create_temporary_user(user)
