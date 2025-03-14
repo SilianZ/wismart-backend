@@ -418,6 +418,7 @@ def _(request: Request, body: ProductBuyRequest):
             product.price,
             buyer.email,
             seller.email,
+            trade.id or -1
         )
         send_product_trade_email(
             buyer.email,
@@ -430,6 +431,7 @@ def _(request: Request, body: ProductBuyRequest):
             product.price,
             buyer.email,
             seller.email,
+            trade.id or -1
         )
         return Response(success=True, message="成功！")
     except Exception as e:

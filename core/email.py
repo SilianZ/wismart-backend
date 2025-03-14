@@ -912,6 +912,7 @@ def send_product_trade_email(
     price: float,
     buyer_email: str,
     seller_email: str,
+    id: int,
 ) -> None:
     with smtplib.SMTP_SSL(
         smtp_server, 465, context=ssl.create_default_context()
@@ -1892,6 +1893,7 @@ def send_product_trade_email(
                 "price": "{:.2f}".format(price),
                 "buyer_email": buyer_email,
                 "seller_email": seller_email,
+                "id": id
             }
         )
         part = MIMEText(mail_body, "html", "utf-8")

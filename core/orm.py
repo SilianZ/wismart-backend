@@ -264,6 +264,7 @@ def create_trade(trade: Trade) -> bool:
         with Session(engine) as session:
             session.add(trade)
             session.commit()
+            session.refresh(trade)
             return True
     except Exception:
         return False
