@@ -62,7 +62,7 @@ def _(request: UserRegisterRequest) -> Response:
         username=request.username,
         password=password_hash(request.password),
         token=token,
-        expiry=int((datetime.now() + timedelta(minutes=5)).timestamp())
+        expiry=int((datetime.now() + timedelta(minutes=5)).timestamp()),
     )
     try:
         exist = create_temporary_user(user)
@@ -70,7 +70,8 @@ def _(request: UserRegisterRequest) -> Response:
             return Response(success=False, message="用户已存在！")
         send_verification_email(request.email, request.username, token)
         return Response(
-            success=True, message="用户创建成功！验证邮件已发送到你的邮箱。"
+            success=True,
+            message="用户创建成功！验证邮件已发送到你的邮箱。验证邮件在 5 分钟内有效。",
         )
     except Exception:
         return Response(success=False, message="创建用户失败！")
@@ -200,9 +201,12 @@ def _(request: ProductFetchRequest) -> Response:
     )
     cos = CosS3Client(config)
     for product in products.products:
-        product.image = get_presigned_url(product.image, cos) if product.image else fallback_img_url
+        product.image = (
+            get_presigned_url(product.image, cos) if product.image else fallback_img_url
+        )
     print(products)
     return Response(success=True, data=products)
+
 
 @app.post("/api/product/detail")
 def _(request: ProductDetailRequest) -> Response:
@@ -213,7 +217,9 @@ def _(request: ProductDetailRequest) -> Response:
         Region=cos_region, SecretId=cos_secret_id, SecretKey=cos_secret_key
     )
     cos = CosS3Client(config)
-    product.image = get_presigned_url(product.image, cos) if product.image else fallback_img_url
+    product.image = (
+        get_presigned_url(product.image, cos) if product.image else fallback_img_url
+    )
     return Response(success=True, data=product)
 
 
@@ -237,7 +243,9 @@ def _(request: Request) -> Response:
     )
     cos = CosS3Client(config)
     for product in products:
-        product.image = get_presigned_url(product.image, cos) if product.image else fallback_img_url
+        product.image = (
+            get_presigned_url(product.image, cos) if product.image else fallback_img_url
+        )
     return Response(success=True, data=products)
 
 
@@ -267,7 +275,7 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
         stock=body.stock,
         isUnlimited=body.isUnlimited,
         ownerId=user.id or -1,
-        time=int(datetime.now().timestamp())
+        time=int(datetime.now().timestamp()),
     )
     result = create_product(product)
     if not result:
@@ -327,6 +335,7 @@ def _(request: Request, body: ProductChangeRequest) -> Response:
         return Response(success=True, message="成功！")
     return Response(success=False, message="失败！")
 
+
 @app.post("/api/product/types/remove")
 def _(request: Request, body: ProductTypeRemoveRequest):
     cookie = request.cookies.get("WISMARTCOOKIE")
@@ -343,6 +352,7 @@ def _(request: Request, body: ProductTypeRemoveRequest):
     if result:
         return Response(success=True, message="成功！")
     return Response(success=False, message="失败！")
+
 
 @app.post("/api/product/types/new")
 def _(request: Request, body: ProductTypeCreateRequest):
@@ -362,6 +372,7 @@ def _(request: Request, body: ProductTypeCreateRequest):
         return Response(success=True, message="成功！")
     return Response(success=False, message="失败！")
 
+
 @app.post("/api/product/buy")
 def _(request: Request, body: ProductBuyRequest):
     if not verify_turnstile_token(body.turnstileToken):
@@ -380,11 +391,43 @@ def _(request: Request, body: ProductBuyRequest):
         return Response(success=False, message="你不能自己购买自己的商品！")
     if product.stock and product.stock < body.count:
         return Response(success=False, message="无效的购买数量！")
-    user = get_user_by_id(product.ownerId)
-    if not user:
+    seller = get_user_by_id(product.ownerId)
+    if not seller:
         return Response(success=False, message="无效的商品所有者！")
-    try:
-        send_product_trade_email(user.email, user.username, body.count, product.name, buyer.username)
-        return Response(success=True, message="成功！")
-    except Exception:
+    trade = Trade(
+        buyerId=buyer.id or -1,
+        sellerId=seller.id or -1,
+        buyerEmail=buyer.email,
+        sellerEmail=seller.email,
+        productId=product.id or -1,
+        count=body.count,
+        total=body.count * product.price,
+    )
+    result = create_trade(trade)
+    if not result:
         return Response(success=False, message="失败！")
+    send_product_trade_email(
+        seller.email,
+        seller.username,
+        body.count,
+        product.name,
+        buyer.username,
+        seller.username,
+        trade.total,
+        product.price,
+        buyer.email,
+        seller.email,
+    )
+    send_product_trade_email(
+        buyer.email,
+        buyer.username,
+        body.count,
+        product.name,
+        buyer.username,
+        seller.username,
+        trade.total,
+        product.price,
+        buyer.email,
+        seller.email,
+    )
+    return Response(success=True, message="成功！")

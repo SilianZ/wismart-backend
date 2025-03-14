@@ -59,10 +59,12 @@ class ProductType(SQLModel, table=True):
 class Trade(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     buyerId: int
-    sellerId: str
-    buyerEmail: int
+    sellerId: int
+    buyerEmail: str
     sellerEmail: str
-    productId: str
+    productId: int
+    count: int
+    total: float
 
 
 engine = create_engine(database_url)
@@ -252,6 +254,15 @@ def create_product_type(product_type: ProductType) -> bool:
     try:
         with Session(engine) as session:
             session.add(product_type)
+            session.commit()
+            return True
+    except Exception:
+        return False
+    
+def create_trade(trade: Trade) -> bool:
+    try:
+        with Session(engine) as session:
+            session.add(trade)
             session.commit()
             return True
     except Exception:
