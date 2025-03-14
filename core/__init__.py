@@ -375,59 +375,65 @@ def _(request: Request, body: ProductTypeCreateRequest):
 
 @app.post("/api/product/buy")
 def _(request: Request, body: ProductBuyRequest):
-    if not verify_turnstile_token(body.turnstileToken):
-        return Response(success=False, message="请通过人机验证！")
-    cookie = request.cookies.get("WISMARTCOOKIE")
-    if not cookie:
-        return Response(success=False, message="未登录！")
-    login = get_user_login_by_cookie(cookie)
-    buyer = get_user_by_email(login.email) if login else None
-    if not buyer:
-        return Response(success=False, message="未登录！")
-    product = get_product_by_id(body.id, True)
-    if not product:
-        return Response(success=False, message="无效的商品！")
-    if product.ownerId == buyer.id:
-        return Response(success=False, message="你不能自己购买自己的商品！")
-    if product.stock and product.stock < body.count:
-        return Response(success=False, message="无效的购买数量！")
-    seller = get_user_by_id(product.ownerId)
-    if not seller:
-        return Response(success=False, message="无效的商品所有者！")
-    trade = Trade(
-        buyerId=buyer.id or -1,
-        sellerId=seller.id or -1,
-        buyerEmail=buyer.email,
-        sellerEmail=seller.email,
-        productId=product.id or -1,
-        count=body.count,
-        total=body.count * product.price,
-    )
-    result = create_trade(trade)
-    if not result:
+    try:
+        if not verify_turnstile_token(body.turnstileToken):
+            return Response(success=False, message="请通过人机验证！")
+        cookie = request.cookies.get("WISMARTCOOKIE")
+        if not cookie:
+            return Response(success=False, message="未登录！")
+        login = get_user_login_by_cookie(cookie)
+        buyer = get_user_by_email(login.email) if login else None
+        if not buyer:
+            return Response(success=False, message="未登录！")
+        product = get_product_by_id(body.id, True)
+        if not product:
+            return Response(success=False, message="无效的商品！")
+        if product.ownerId == buyer.id:
+            return Response(success=False, message="你不能自己购买自己的商品！")
+        if product.stock and product.stock < body.count:
+            return Response(success=False, message="无效的购买数量！")
+        seller = get_user_by_id(product.ownerId)
+        if not seller:
+            return Response(success=False, message="无效的商品所有者！")
+        trade = Trade(
+            buyerId=buyer.id or -1,
+            sellerId=seller.id or -1,
+            buyerEmail=buyer.email,
+            sellerEmail=seller.email,
+            productId=product.id or -1,
+            count=body.count,
+            total=body.count * product.price,
+        )
+        result = create_trade(trade)
+        if not result:
+            return Response(success=False, message="失败！")
+        send_product_trade_email(
+            seller.email,
+            seller.username,
+            body.count,
+            product.name,
+            buyer.username,
+            seller.username,
+            trade.total,
+            product.price,
+            buyer.email,
+            seller.email,
+        )
+        send_product_trade_email(
+            buyer.email,
+            buyer.username,
+            body.count,
+            product.name,
+            buyer.username,
+            seller.username,
+            trade.total,
+            product.price,
+            buyer.email,
+            seller.email,
+        )
+        return Response(success=True, message="成功！")
+    except Exception as e:
+        print(e)
         return Response(success=False, message="失败！")
-    send_product_trade_email(
-        seller.email,
-        seller.username,
-        body.count,
-        product.name,
-        buyer.username,
-        seller.username,
-        trade.total,
-        product.price,
-        buyer.email,
-        seller.email,
-    )
-    send_product_trade_email(
-        buyer.email,
-        buyer.username,
-        body.count,
-        product.name,
-        buyer.username,
-        seller.username,
-        trade.total,
-        product.price,
-        buyer.email,
-        seller.email,
-    )
-    return Response(success=True, message="成功！")
+        
+        
