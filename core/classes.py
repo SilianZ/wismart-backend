@@ -43,6 +43,9 @@ class ProductCreateRequest(BaseModel):
 class ProductTypeRemoveRequest(BaseModel):
     id: int
 
+class TradeDetailFetchRequest(BaseModel):
+    id: int
+
 class ProductTypeCreateRequest(BaseModel):
     type: str
 

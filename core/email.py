@@ -1,6 +1,7 @@
 import smtplib, ssl, string
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from html import escape
 from core.env import *
 
 
@@ -477,7 +478,7 @@ def send_verification_email(email: str, user: str, token: str) -> None:
 </html>
         """
         mail_body = string.Template(template).safe_substitute(
-            {"user": user, "token": token}
+            {"user": escape(user), "token": token}
         )
         part = MIMEText(mail_body, "html", "utf-8")
         message.attach(part)
@@ -894,7 +895,7 @@ def send_product_status_change_email(email: str, details: str, user: str) -> Non
 </html>
         """
         mail_body = string.Template(template).safe_substitute(
-            {"details": details, "user": user}
+            {"details": escape(details), "user": escape(user)}
         )
         part = MIMEText(mail_body, "html", "utf-8")
         message.attach(part)
@@ -1085,10 +1086,6 @@ def send_product_trade_email(
                 display: none !important
             }
 
-            .t103 {
-                padding: 40px !important
-            }
-
             .t105 {
                 border-radius: 0 !important
             }
@@ -1096,10 +1093,6 @@ def send_product_trade_email(
             .t97 {
                 mso-line-height-alt: 46px !important;
                 line-height: 46px !important
-            }
-
-            .t86 {
-                padding: 30px !important
             }
 
             .t60,
@@ -1303,7 +1296,7 @@ def send_product_trade_email(
                                                                                         <td class="t19">
                                                                                             <p class="t17"
                                                                                                 style="margin:0;Margin:0;font-family:Open Sans,BlinkMacSystemFont,Segoe UI,Helvetica Neue,Arial,sans-serif;line-height:25px;font-weight:400;font-style:normal;font-size:15px;text-decoration:none;text-transform:none;letter-spacing:-0.1px;direction:ltr;color:#141414;text-align:left;mso-line-height-rule:exactly;mso-text-raise:3px;">
-                                                                                                以下是交易的详细信息：</p>
+                                                                                                以下是交易的详细信息，请双方尽快通过邮件联系：</p>
                                                                                         </td>
                                                                                     </tr>
                                                                                 </table>
@@ -1884,11 +1877,11 @@ def send_product_trade_email(
             """
         mail_body = string.Template(template).safe_substitute(
             {
-                "buyer": buyer,
-                "user": user,
-                "product": product,
+                "buyer": escape(buyer),
+                "user": escape(user),
+                "product": escape(product),
                 "count": count,
-                "seller": seller,
+                "seller": escape(seller),
                 "total": "{:.2f}".format(total),
                 "price": "{:.2f}".format(price),
                 "buyer_email": buyer_email,

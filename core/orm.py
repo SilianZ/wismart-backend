@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, create_engine, Session, select, or_, column
 from sqlmodel import Field
-from typing import Union, Optional, Sequence
+from typing import Union, Optional, Sequence, Literal
 from core.env import *
 from pydantic import BaseModel
 from core.classes import *
@@ -65,6 +65,7 @@ class Trade(SQLModel, table=True):
     productId: int
     count: int
     total: float
+    status: str = "pending"
 
 
 engine = create_engine(database_url)
@@ -265,6 +266,18 @@ def create_trade(trade: Trade) -> bool:
             session.add(trade)
             session.commit()
             session.refresh(trade)
+            return True
+    except Exception:
+        return False
+
+def get_trade_by_id(id: int) -> bool:
+    try:
+        with Session(engine) as session:
+            product_type = session.exec(
+                select(Trade).where(Trade.id == id)
+            ).first()
+            session.delete(product_type)
+            session.commit()
             return True
     except Exception:
         return False
