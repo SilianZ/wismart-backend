@@ -66,6 +66,12 @@ class ProductBuyRequest(BaseModel):
     turnstileToken: str
     count: int
 
+class TradeChangeRequest(BaseModel):
+    id: int
+    status: str
+
+class UserProfileFetchRequest(BaseModel):
+    id: int
 
 class Response(BaseModel):
     success: bool

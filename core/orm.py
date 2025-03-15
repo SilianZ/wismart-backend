@@ -270,14 +270,6 @@ def create_trade(trade: Trade) -> bool:
     except Exception:
         return False
 
-def get_trade_by_id(id: int) -> bool:
-    try:
-        with Session(engine) as session:
-            product_type = session.exec(
-                select(Trade).where(Trade.id == id)
-            ).first()
-            session.delete(product_type)
-            session.commit()
-            return True
-    except Exception:
-        return False
+def get_trade_by_id(id: int) -> Union[Trade, None]:
+    with Session(engine) as session:
+        return session.exec(select(Trade).where(Trade.id == id)).first()

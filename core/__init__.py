@@ -443,3 +443,41 @@ def _(request: Request, body: TradeDetailFetchRequest):
     user = get_user_by_email(login.email) if login else None
     if not user:
         return Response(success=False, message="未登录！")
+    trade = get_trade_by_id(body.id)
+    if not trade:
+        return Response(success=False, message="交易不存在或无访问权限！")
+    if trade.buyerId != user.id and trade.sellerId != user.id:
+        return Response(success=False, message="交易不存在或无访问权限！")
+    trade_dict = trade.model_dump()
+    trade = { "identity": "buyer" if trade.buyerId == user.id else "seller", **trade_dict }
+    return Response(success=False, data=trade)
+
+@app.post("/api/trade/change")
+def _(request: Request, body: TradeChangeRequest):
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return Response(success=False, message="未登录！")
+    login = get_user_login_by_cookie(cookie)
+    user = get_user_by_email(login.email) if login else None
+    if not user:
+        return Response(success=False, message="未登录！")
+    trade = get_trade_by_id(body.id)
+    if not trade:
+        return Response(success=False, message="交易不存在或无访问权限！")
+    if trade.buyerId != user.id and trade.sellerId != user.id:
+        return Response(success=False, message="交易不存在或无访问权限！")
+    
+@app.post("/api/user/profile")
+def _(request: Request, body: UserProfileFetchRequest):
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return Response(success=False, message="未登录！")
+    login = get_user_login_by_cookie(cookie)
+    user = get_user_by_email(login.email) if login else None
+    if not user:
+        return Response(success=False, message="未登录！")
+    user_info = get_user_by_id(body.id)
+    if not user_info:
+        return Response(success=False, message="用户不存在！")
+    data = { "email": user_info.email, "id": user_info.id, "username": user_info.username}
+    return Response(success=True, data=data)
