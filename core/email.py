@@ -485,13 +485,13 @@ def send_verification_email(email: str, user: str, token: str) -> None:
         server.sendmail(smtp_email, email, message.as_string())
 
 
-def send_product_status_change_email(email: str, details: str, user: str) -> None:
+def send_status_change_email(title: str, email: str, details: str, user: str) -> None:
     with smtplib.SMTP_SSL(
         smtp_server, 465, context=ssl.create_default_context()
     ) as server:
         server.login(smtp_email, smtp_password)
         message = MIMEMultipart("alternative")
-        message["Subject"] = "[WisMart] 商品状态更新"
+        message["Subject"] = f"[WisMart] {title}"
         message["From"] = f"WisMart <{smtp_email}>"
         message["To"] = email
         template = """

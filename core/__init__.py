@@ -51,7 +51,7 @@ def _() -> RedirectResponse:
 @app.post("/api/user/register")
 def _(request: UserRegisterRequest) -> Response:
     if not verify_turnstile_token(request.turnstileToken):
-        return Response(success=False, message="请通过人机验证！")
+        return Response(success=False, message="请通过人机验证。")
     token = hashlib.md5(
         (
             request.email + request.username + str(random.randint(100000, 999999))
@@ -67,21 +67,21 @@ def _(request: UserRegisterRequest) -> Response:
     try:
         exist = create_temporary_user(user)
         if not exist:
-            return Response(success=False, message="用户已存在！")
+            return Response(success=False, message="用户已存在。")
         send_verification_email(request.email, request.username, token)
         return Response(
             success=True,
-            message="用户创建成功！验证邮件已发送到你的邮箱。验证邮件在 5 分钟内有效。",
+            message="用户创建成功。验证邮件已发送到你的邮箱。验证邮件在 5 分钟内有效。",
         )
     except Exception:
-        return Response(success=False, message="创建用户失败！")
+        return Response(success=False, message="创建用户失败。")
 
 
 @app.post("/api/user/verify_email")
 def _(request: UserVerifyRequest) -> Response:
     user = get_temp_user_by_token(request.token)
     if not user:
-        return Response(success=False, message="令牌已过期！")
+        return Response(success=False, message="令牌已过期。")
     remove_temporary_user(user)
     new_user = User(
         username=user.username,
@@ -90,29 +90,29 @@ def _(request: UserVerifyRequest) -> Response:
     )
     result = create_user(new_user)
     if not result:
-        return Response(success=False, message="创建用户失败！")
-    return Response(success=True, message="用户验证成功！")
+        return Response(success=False, message="创建用户失败。")
+    return Response(success=True, message="用户验证成功。")
 
 
 @app.post("/api/user/login")
 def _(request: UserLoginRequest) -> JSONResponse:
     if not verify_turnstile_token(request.turnstileToken):
         return JSONResponse(
-            Response(success=False, message="请通过人机验证！").model_dump()
+            Response(success=False, message="请通过人机验证。").model_dump()
         )
     user = get_user_by_email(request.email)
     temp_user = get_temp_user_by_email(request.email)
     if not user:
         if not temp_user:
             return JSONResponse(
-                Response(success=False, message="用户未找到！").model_dump()
+                Response(success=False, message="用户未找到。").model_dump()
             )
         return JSONResponse(
-            Response(success=False, message="用户未验证！").model_dump()
+            Response(success=False, message="用户未验证。").model_dump()
         )
     if verify_password(request.password, user.password):
         response = JSONResponse(
-            Response(success=True, message="登录成功！").model_dump()
+            Response(success=True, message="登录成功。").model_dump()
         )
         cookie = hashlib.md5(
             (
@@ -131,12 +131,12 @@ def _(request: UserLoginRequest) -> JSONResponse:
         )
         if not result:
             return JSONResponse(
-                Response(success=False, message="登陆失败！").model_dump()
+                Response(success=False, message="登陆失败。").model_dump()
             )
         response.set_cookie("WISMARTCOOKIE", cookie, expires=3600)
         return response
     return JSONResponse(
-        Response(success=False, message="用户名或密码错误！").model_dump()
+        Response(success=False, message="用户名或密码错误。").model_dump()
     )
 
 
@@ -144,14 +144,14 @@ def _(request: UserLoginRequest) -> JSONResponse:
 def _(request: Request) -> JSONResponse:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
-        return JSONResponse(Response(success=False, message="未登录！").model_dump())
+        return JSONResponse(Response(success=False, message="未登录。").model_dump())
     user = get_user_login_by_cookie(cookie)
     if not user:
-        return JSONResponse(Response(success=False, message="未登录！").model_dump())
+        return JSONResponse(Response(success=False, message="未登录。").model_dump())
     result = remove_user_login(user)
     if not result:
-        return JSONResponse(Response(success=False, message="登出失败！").model_dump())
-    response = JSONResponse(Response(success=True, message="登出成功！").model_dump())
+        return JSONResponse(Response(success=False, message="登出失败。").model_dump())
+    response = JSONResponse(Response(success=True, message="登出成功。").model_dump())
     response.delete_cookie("WISMARTCOOKIE")
     return response
 
@@ -193,7 +193,7 @@ def _(request: ProductFetchRequest) -> Response:
         or request.keyword
         and request.keyword == ""
     ):
-        return Response(success=False, message="参数错误！")
+        return Response(success=False, message="参数错误。")
     types = get_product_types()
     products = get_products(request.page, request.row, request.type, request.keyword)
     config = CosConfig(
@@ -201,9 +201,7 @@ def _(request: ProductFetchRequest) -> Response:
     )
     cos = CosS3Client(config)
     for product in products.products:
-        product.image = (
-            get_presigned_url(product.image, cos) if product.image else fallback_img_url
-        )
+        product.image = get_presigned_url(product.image, cos) if product.image else None
     print(products)
     return Response(success=True, data=products)
 
@@ -212,14 +210,12 @@ def _(request: ProductFetchRequest) -> Response:
 def _(request: ProductDetailRequest) -> Response:
     product = get_product_by_id(request.id, True)
     if not product:
-        return Response(success=False, message="无效的商品！")
+        return Response(success=False, message="无效的商品。")
     config = CosConfig(
         Region=cos_region, SecretId=cos_secret_id, SecretKey=cos_secret_key
     )
     cos = CosS3Client(config)
-    product.image = (
-        get_presigned_url(product.image, cos) if product.image else fallback_img_url
-    )
+    product.image = get_presigned_url(product.image, cos) if product.image else None
     return Response(success=True, data=product)
 
 
@@ -227,45 +223,43 @@ def _(request: ProductDetailRequest) -> Response:
 def _(request: Request) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     admin = False
     if cookie:
         login = get_user_login_by_cookie(cookie)
         user = get_user_by_email(login.email) if login else None
         if not user:
-            return Response(success=False, message="未登录！")
+            return Response(success=False, message="未登录。")
         admin = verify_admin_by_email(user.email)
     if not admin:
-        return Response(success=False, message="无访问权限！")
+        return Response(success=False, message="无访问权限。")
     products = get_all_products()
     config = CosConfig(
         Region=cos_region, SecretId=cos_secret_id, SecretKey=cos_secret_key
     )
     cos = CosS3Client(config)
     for product in products:
-        product.image = (
-            get_presigned_url(product.image, cos) if product.image else fallback_img_url
-        )
+        product.image = get_presigned_url(product.image, cos) if product.image else None
     return Response(success=True, data=products)
 
 
 @app.post("/api/product/new")
 def _(request: Request, body: ProductCreateRequest) -> Response:
     if not verify_turnstile_token(body.turnstileToken):
-        return Response(success=False, message="请通过人机验证！")
+        return Response(success=False, message="请通过人机验证。")
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     login = get_user_login_by_cookie(cookie)
     user = get_user_by_email(login.email) if login else None
     if not user:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     types = get_product_types()
     data = [type.id for type in types]
     if body.type not in data:
-        return Response(success=False, message="无效的商品类型！")
+        return Response(success=False, message="无效的商品类型。")
     if body.price < 1 or (not body.isUnlimited and (not body.stock or body.stock < 1)):
-        return Response(success=False, message="价格或库存错误！")
+        return Response(success=False, message="价格或库存错误。")
     product = Product(
         name=body.name,
         type=body.type,
@@ -279,8 +273,8 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
     )
     result = create_product(product)
     if not result:
-        return Response(success=False, message="创建商品失败！")
-    return Response(success=True, message="商品创建成功！")
+        return Response(success=False, message="创建商品失败。")
+    return Response(success=True, message="商品创建成功。")
 
 
 @app.get("/api/product/types")
@@ -292,18 +286,18 @@ def _() -> Response:
 def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     login = get_user_login_by_cookie(cookie)
     user = get_user_by_email(login.email) if login else None
     if not user:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     _, ext = os.path.splitext(body.fileName)
     if ext not in [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff"]:
-        return Response(success=False, message="非法文件，禁止上传！")
+        return Response(success=False, message="非法文件，禁止上传。")
 
     credential = get_temp_cos_security_token(ext)
     if not credential:
-        return Response(success=False, message="获取临时密钥失败！")
+        return Response(success=False, message="获取临时密钥失败。")
     return Response(
         success=True, data={"region": cos_region, "bucket": cos_bucket, **credential}
     )
@@ -313,87 +307,108 @@ def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
 def _(request: Request, body: ProductChangeRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     login = get_user_login_by_cookie(cookie)
     product = get_product_by_id(body.id, False)
     if not product:
-        return Response(success=False, message="商品不存在或无访问权限！")
+        return Response(success=False, message="商品不存在或无访问权限。")
     user = get_user_by_email(login.email) if login else None
     if not user:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     admin = verify_admin_by_email(user.email)
     if not admin and product.ownerId != user.id:
-        return Response(success=False, message="商品不存在或无访问权限！")
+        return Response(success=False, message="商品不存在或无访问权限。")
     if product.isVerified != body.isVerified and not admin:
-        return Response(success=False, message="商品不存在或无访问权限！")
-    result = change_product(product, body)
+        return Response(success=False, message="商品不存在或无访问权限。")
+    result = change_product(body)
     owner = get_user_by_id(product.ownerId)
     if not owner:
-        return Response(success=False, message="失败！")
+        return Response(success=False, message="失败。")
     if result:
-        send_product_status_change_email(owner.email, body.details, owner.username)
-        return Response(success=True, message="成功！")
-    return Response(success=False, message="失败！")
+        send_status_change_email(
+            "商品状态更新", owner.email, body.details, owner.username
+        )
+        return Response(success=True, message="成功。")
+    return Response(success=False, message="失败。")
 
 
 @app.post("/api/product/types/remove")
 def _(request: Request, body: ProductTypeRemoveRequest):
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     login = get_user_login_by_cookie(cookie)
     user = get_user_by_email(login.email) if login else None
     if not user:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     admin = verify_admin_by_email(user.email)
     if not admin:
-        return Response(success=False, message="无访问权限！")
+        return Response(success=False, message="无访问权限。")
     result = remove_product_type_by_id(body.id)
     if result:
-        return Response(success=True, message="成功！")
-    return Response(success=False, message="失败！")
+        return Response(success=True, message="成功。")
+    return Response(success=False, message="失败。")
 
 
 @app.post("/api/product/types/new")
 def _(request: Request, body: ProductTypeCreateRequest):
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     login = get_user_login_by_cookie(cookie)
     user = get_user_by_email(login.email) if login else None
     if not user:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     admin = verify_admin_by_email(user.email)
     if not admin:
-        return Response(success=False, message="无访问权限！")
+        return Response(success=False, message="无访问权限。")
     product_type = ProductType(type=body.type)
     result = create_product_type(product_type)
     if result:
-        return Response(success=True, message="成功！")
-    return Response(success=False, message="失败！")
+        return Response(success=True, message="成功。")
+    return Response(success=False, message="失败。")
 
+@app.post("/api/product/types/change")
+def _(request: Request, body: ProductTypeChangeRequest):
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return Response(success=False, message="未登录。")
+    login = get_user_login_by_cookie(cookie)
+    user = get_user_by_email(login.email) if login else None
+    if not user:
+        return Response(success=False, message="未登录。")
+    admin = verify_admin_by_email(user.email)
+    if not admin:
+        return Response(success=False, message="无效的商品类型或无访问权限。")
+    type = get_product_type_by_id(body.id)
+    if not type:
+        return Response(success=True, message="无效的商品类型或无访问权限。")
+    result = change_product_type(body)
+    if result:
+        return Response(success=True, message="成功。")
+    return Response(success=False, message="失败。")
 
 @app.post("/api/product/buy")
 def _(request: Request, body: ProductBuyRequest):
     if not verify_turnstile_token(body.turnstileToken):
-        return Response(success=False, message="请通过人机验证！")
+        return Response(success=False, message="请通过人机验证。")
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     login = get_user_login_by_cookie(cookie)
     buyer = get_user_by_email(login.email) if login else None
     if not buyer:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     product = get_product_by_id(body.id, True)
     if not product:
-        return Response(success=False, message="无效的商品！")
+        return Response(success=False, message="无效的商品。")
     if product.ownerId == buyer.id:
-        return Response(success=False, message="你不能自己购买自己的商品！")
+        return Response(success=False, message="你不能自己购买自己的商品。")
     if product.stock and product.stock < body.count:
-        return Response(success=False, message="无效的购买数量！")
+        return Response(success=False, message="无效的购买数量。")
     seller = get_user_by_id(product.ownerId)
     if not seller:
-        return Response(success=False, message="无效的商品所有者！")
+        return Response(success=False, message="无效的商品所有者。")
     trade = Trade(
         buyerId=buyer.id or -1,
         sellerId=seller.id or -1,
@@ -405,7 +420,7 @@ def _(request: Request, body: ProductBuyRequest):
     )
     result = create_trade(trade)
     if not result:
-        return Response(success=False, message="失败！")
+        return Response(success=False, message="失败。")
     send_product_trade_email(
         seller.email,
         seller.username,
@@ -432,52 +447,79 @@ def _(request: Request, body: ProductBuyRequest):
         seller.email,
         trade.id or -1,
     )
-    return Response(success=True, message="成功！")
+    return Response(success=True, message="成功。")
+
 
 @app.post("/api/trade/detail")
 def _(request: Request, body: TradeDetailFetchRequest):
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     login = get_user_login_by_cookie(cookie)
     user = get_user_by_email(login.email) if login else None
     if not user:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     trade = get_trade_by_id(body.id)
     if not trade:
-        return Response(success=False, message="交易不存在或无访问权限！")
+        return Response(success=False, message="交易不存在或无访问权限。")
     if trade.buyerId != user.id and trade.sellerId != user.id:
-        return Response(success=False, message="交易不存在或无访问权限！")
-    trade_dict = trade.model_dump()
-    trade = { "identity": "buyer" if trade.buyerId == user.id else "seller", **trade_dict }
+        return Response(success=False, message="交易不存在或无访问权限。")
     return Response(success=False, data=trade)
+
 
 @app.post("/api/trade/change")
 def _(request: Request, body: TradeChangeRequest):
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     login = get_user_login_by_cookie(cookie)
     user = get_user_by_email(login.email) if login else None
     if not user:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     trade = get_trade_by_id(body.id)
     if not trade:
-        return Response(success=False, message="交易不存在或无访问权限！")
+        return Response(success=False, message="交易不存在或无访问权限。")
     if trade.buyerId != user.id and trade.sellerId != user.id:
-        return Response(success=False, message="交易不存在或无访问权限！")
-    
+        return Response(success=False, message="交易不存在或无访问权限。")
+    if trade.status != "pending":
+        return Response(success=False, message="交易已结束。")
+    if trade.status == body.status:
+        return Response(success=False, message="无效的操作。")
+    seller = get_user_by_id(trade.sellerId)
+    buyer = get_user_by_id(trade.buyerId)
+    result = change_trade(body)
+    if not result:
+        return Response(success=False, message="失败。")
+    send_status_change_email(
+        "商品状态更新",
+        trade.sellerEmail,
+        f"你的交易 #{trade.id} 已{'完成' if body.status == 'completed' else '取消'}",
+        seller.username if seller else "",
+    )
+    send_status_change_email(
+        "商品状态更新",
+        trade.buyerEmail,
+        f"你的交易 #{trade.id} 已{'完成' if body.status == 'completed' else '取消'}",
+        buyer.username if buyer else "",
+    )
+    return Response(success=False, message="成功。")
+
+
 @app.post("/api/user/profile")
 def _(request: Request, body: UserProfileFetchRequest):
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     login = get_user_login_by_cookie(cookie)
     user = get_user_by_email(login.email) if login else None
     if not user:
-        return Response(success=False, message="未登录！")
+        return Response(success=False, message="未登录。")
     user_info = get_user_by_id(body.id)
     if not user_info:
-        return Response(success=False, message="用户不存在！")
-    data = { "email": user_info.email, "id": user_info.id, "username": user_info.username}
+        return Response(success=False, message="用户不存在。")
+    data = {
+        "email": user_info.email,
+        "id": user_info.id,
+        "username": user_info.username,
+    }
     return Response(success=True, data=data)

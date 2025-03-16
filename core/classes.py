@@ -49,6 +49,10 @@ class TradeDetailFetchRequest(BaseModel):
 class ProductTypeCreateRequest(BaseModel):
     type: str
 
+class ProductTypeChangeRequest(BaseModel):
+    id: int
+    type: str
+
 
 class COSCredentialGenerateRequest(BaseModel):
     fileName: str

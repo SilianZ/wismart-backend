@@ -218,10 +218,10 @@ def get_product_by_id(id: int, verified: bool) -> Union[Product, None]:
         return session.exec(query).first()
 
 
-def change_product(product: Product, request: ProductChangeRequest) -> bool:
+def change_product(request: ProductChangeRequest) -> bool:
     try:
         with Session(engine) as session:
-            db_product = session.get(Product, product.id)
+            db_product = session.get(Product, request.id)
             if db_product:
                 db_product.isVerified = request.isVerified
                 db_product.stock = request.stock
@@ -273,3 +273,31 @@ def create_trade(trade: Trade) -> bool:
 def get_trade_by_id(id: int) -> Union[Trade, None]:
     with Session(engine) as session:
         return session.exec(select(Trade).where(Trade.id == id)).first()
+    
+def change_trade(request: TradeChangeRequest) -> bool:
+    try:
+        with Session(engine) as session:
+            db_trade = session.get(Trade, request.id)
+            if db_trade:
+                db_trade.status = request.status
+                session.commit()
+                return True
+            return False
+    except Exception:
+        return False
+    
+def change_product_type(request: ProductTypeChangeRequest) -> bool:
+    try:
+        with Session(engine) as session:
+            db_trade = session.get(ProductType, request.id)
+            if db_trade:
+                db_trade.type = request.type
+                session.commit()
+                return True
+            return False
+    except Exception:
+        return False
+    
+def get_product_type_by_id(id: int) -> Union[ProductType, None]:
+    with Session(engine) as session:
+        return session.exec(select(ProductType).where(ProductType.id == id)).first()
