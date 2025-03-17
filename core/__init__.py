@@ -491,18 +491,18 @@ def _(request: Request, body: TradeChangeRequest):
     if not result:
         return Response(success=False, message="失败。")
     send_status_change_email(
-        "商品状态更新",
+        "交易状态更新",
         trade.sellerEmail,
         f"你的交易 #{trade.id} 已{'完成' if body.status == 'completed' else '取消'}",
         seller.username if seller else "",
     )
     send_status_change_email(
-        "商品状态更新",
+        "交易状态更新",
         trade.buyerEmail,
         f"你的交易 #{trade.id} 已{'完成' if body.status == 'completed' else '取消'}",
         buyer.username if buyer else "",
     )
-    return Response(success=False, message="成功。")
+    return Response(success=True, message="成功。")
 
 
 @app.post("/api/user/profile")
