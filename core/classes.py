@@ -65,6 +65,9 @@ class ProductChangeRequest(BaseModel):
     sales: int
     details: str
 
+class ProductRemoveRequest(BaseModel):
+    id: int
+
 class ProductBuyRequest(BaseModel):
     id: int
     turnstileToken: str

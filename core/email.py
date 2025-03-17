@@ -1261,7 +1261,7 @@ def send_product_trade_email(
                                                                                             <p class="t12"
                                                                                                 style="margin:0;Margin:0;font-family:Open Sans,BlinkMacSystemFont,Segoe UI,Helvetica Neue,Arial,sans-serif;line-height:25px;font-weight:400;font-style:normal;font-size:15px;text-decoration:none;text-transform:none;letter-spacing:-0.1px;direction:ltr;color:#141414;text-align:left;mso-line-height-rule:exactly;mso-text-raise:3px;">
                                                                                                 ${buyer} 将购买 ${seller}
-                                                                                                的商品 ${product}。</p>
+                                                                                                的商品“${product}”。</p>
                                                                                         </td>
                                                                                     </tr>
                                                                                 </table>

@@ -301,3 +301,16 @@ def change_product_type(request: ProductTypeChangeRequest) -> bool:
 def get_product_type_by_id(id: int) -> Union[ProductType, None]:
     with Session(engine) as session:
         return session.exec(select(ProductType).where(ProductType.id == id)).first()
+    
+
+def remove_product_by_id(id: int) -> bool:
+    try:
+        with Session(engine) as session:
+            product = session.exec(
+                select(Product).where(Product.id == id)
+            ).first()
+            session.delete(product)
+            session.commit()
+            return True
+    except Exception:
+        return False

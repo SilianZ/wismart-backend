@@ -281,6 +281,7 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
 def _() -> Response:
     return Response(success=True, data=get_product_types())
 
+@app.get("/api")
 
 @app.post("/api/cos/credential")
 def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
@@ -327,6 +328,32 @@ def _(request: Request, body: ProductChangeRequest) -> Response:
     if result:
         send_status_change_email(
             "商品状态更新", owner.email, body.details, owner.username
+        )
+        return Response(success=True, message="成功。")
+    return Response(success=False, message="失败。")
+
+@app.post("/api/product/remove")
+def _(request: Request, body: ProductRemoveRequest):
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return Response(success=False, message="未登录。")
+    login = get_user_login_by_cookie(cookie)
+    user = get_user_by_email(login.email) if login else None
+    if not user:
+        return Response(success=False, message="未登录。")
+    admin = verify_admin_by_email(user.email)
+    if not admin:
+        return Response(success=False, message="无效的商品或无访问权限。")
+    product = get_product_by_id(body.id, False)
+    if not product:
+        return Response(success=False, message="无效的商品或无访问权限。")
+    owner = get_user_by_id(product.ownerId)
+    if not owner:
+        return Response(success=False, message="失败。")
+    result = remove_product_by_id(body.id)
+    if result:
+        send_status_change_email(
+            "商品状态更新", owner.email, f"你的商品“{product.name}”已被管理员删除。", owner.username
         )
         return Response(success=True, message="成功。")
     return Response(success=False, message="失败。")
@@ -493,13 +520,13 @@ def _(request: Request, body: TradeChangeRequest):
     send_status_change_email(
         "交易状态更新",
         trade.sellerEmail,
-        f"你的交易 #{trade.id} 已{'完成' if body.status == 'completed' else '取消'}",
+        f"你的交易 #{trade.id} 已{'完成' if body.status == 'completed' else '取消'}。",
         seller.username if seller else "",
     )
     send_status_change_email(
         "交易状态更新",
         trade.buyerEmail,
-        f"你的交易 #{trade.id} 已{'完成' if body.status == 'completed' else '取消'}",
+        f"你的交易 #{trade.id} 已{'完成' if body.status == 'completed' else '取消'}。",
         buyer.username if buyer else "",
     )
     return Response(success=True, message="成功。")
