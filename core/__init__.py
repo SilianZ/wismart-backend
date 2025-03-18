@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.requests import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
@@ -36,6 +36,10 @@ app.add_middleware(
 class LogMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
+        body = None
+        if isinstance(response, StreamingResponse):
+            body_bytes = [item.encode("utf-8") if isinstance(item, str) else item async for item in response.body_iterator]
+            body = b"".join(body_bytes).decode()
         log = Log(
             time=datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             userAgent=request.headers.get("User-Agent", ""),
@@ -44,7 +48,7 @@ class LogMiddleware(BaseHTTPMiddleware):
             url=request.url.path,
             method=request.method,
             status=response.status_code,
-            response=str(response)
+            response=body
         )
         create_log(log)
         return response
