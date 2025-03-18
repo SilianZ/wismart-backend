@@ -195,7 +195,7 @@ def _(request: Request) -> Response:
     if not admin:
         return Response(success=False, message="无访问权限。")
     db_users = get_all_users()
-    users = {user.id: {"email": user.email, "username": user.username} for user in db_users}
+    users = [{"id": user.id,"email": user.email, "username": user.username} for user in db_users]
     return Response(success=True, data=users)
 
 @app.get("/api/user/verify_login")
