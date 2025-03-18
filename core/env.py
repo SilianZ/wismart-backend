@@ -1,4 +1,7 @@
+import dotenv
 import os
+
+dotenv.load_dotenv()
 
 database_url = os.getenv("DATABASE_URL") or ""
 smtp_server = os.getenv("SMTP_SERVER") or ""

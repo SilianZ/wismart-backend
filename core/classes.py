@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, Any
+from typing import Optional, Any, Union
 
 
 class UserRegisterRequest(BaseModel):
@@ -63,7 +63,7 @@ class ProductChangeRequest(BaseModel):
     isVerified: bool
     stock: int | None
     sales: int
-    details: str
+    details: Union[str, None] = None
 
 class ProductRemoveRequest(BaseModel):
     id: int

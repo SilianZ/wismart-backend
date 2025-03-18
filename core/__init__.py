@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.requests import Request
+from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
 from qcloud_cos import CosConfig, CosS3Client
 from core.orm import *
@@ -32,6 +33,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class LogMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        log = Log(
+            time=datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            userAgent=request.headers.get("User-Agent", ""),
+            ip=request.client.host if request.client else None,
+            port=request.client.port if request.client else None,
+            url=request.url.path,
+            method=request.method,
+            status=response.status_code,
+            response=response.body.decode() if hasattr(response, "body") and isinstance(response.body, bytes) else None
+        )
+        create_log(log)
+        return response
+    
+app.add_middleware(LogMiddleware)
 
 def password_hash(password: str) -> str:
     salt = bcrypt.gensalt()
@@ -281,8 +299,8 @@ def _(request: Request, body: ProductCreateRequest) -> Response:
 def _() -> Response:
     return Response(success=True, data=get_product_types())
 
-@app.get("/api")
 
+@app.get("/api")
 @app.post("/api/cos/credential")
 def _(request: Request, body: COSCredentialGenerateRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
@@ -327,10 +345,11 @@ def _(request: Request, body: ProductChangeRequest) -> Response:
         return Response(success=False, message="失败。")
     if result:
         send_status_change_email(
-            "商品状态更新", owner.email, body.details, owner.username
+            "商品状态更新", owner.email, body.details or "", owner.username
         )
         return Response(success=True, message="成功。")
     return Response(success=False, message="失败。")
+
 
 @app.post("/api/product/remove")
 def _(request: Request, body: ProductRemoveRequest):
@@ -353,7 +372,10 @@ def _(request: Request, body: ProductRemoveRequest):
     result = remove_product_by_id(body.id)
     if result:
         send_status_change_email(
-            "商品状态更新", owner.email, f"你的商品“{product.name}”已被管理员删除。", owner.username
+            "商品状态更新",
+            owner.email,
+            f"你的商品“{product.name}”已被管理员删除。",
+            owner.username,
         )
         return Response(success=True, message="成功。")
     return Response(success=False, message="失败。")
@@ -395,6 +417,7 @@ def _(request: Request, body: ProductTypeCreateRequest):
         return Response(success=True, message="成功。")
     return Response(success=False, message="失败。")
 
+
 @app.post("/api/product/types/change")
 def _(request: Request, body: ProductTypeChangeRequest):
     cookie = request.cookies.get("WISMARTCOOKIE")
@@ -414,6 +437,7 @@ def _(request: Request, body: ProductTypeChangeRequest):
     if result:
         return Response(success=True, message="成功。")
     return Response(success=False, message="失败。")
+
 
 @app.post("/api/product/buy")
 def _(request: Request, body: ProductBuyRequest):
@@ -517,6 +541,18 @@ def _(request: Request, body: TradeChangeRequest):
     result = change_trade(body)
     if not result:
         return Response(success=False, message="失败。")
+    product = get_product_by_id(body.id, False)
+    if not product:
+        return Response(success=False, message="失败。")
+    product.sales += trade.count
+    change_product(
+        ProductChangeRequest(
+            id=product.id or -1,
+            isVerified=product.isVerified,
+            stock=product.stock,
+            sales=product.sales,
+        )
+    )
     send_status_change_email(
         "交易状态更新",
         trade.sellerEmail,

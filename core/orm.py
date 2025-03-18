@@ -40,7 +40,7 @@ class Product(SQLModel, table=True):
     stock: int | None
     sales: int = 0
     isVerified: bool = False
-    isUnlimited: bool = False
+    isUnlimited: bool = False # nothing to do here but to make both the frontend and the backend work
     ownerId: int
     time: int
 
@@ -66,6 +66,17 @@ class Trade(SQLModel, table=True):
     count: int
     total: float
     status: str = "pending"
+
+class Log(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    time: str
+    userAgent: str
+    ip: str | None = None
+    url: str
+    method: str
+    status: int
+    response: str | None = None
+    port: int | None = None
 
 
 engine = create_engine(database_url)
@@ -311,6 +322,16 @@ def remove_product_by_id(id: int) -> bool:
             ).first()
             session.delete(product)
             session.commit()
+            return True
+    except Exception:
+        return False
+    
+def create_log(log: Log) -> bool:
+    try:
+        with Session(engine) as session:
+            session.add(log)
+            session.commit()
+            session.refresh(log)
             return True
     except Exception:
         return False
