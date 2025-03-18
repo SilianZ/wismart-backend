@@ -338,3 +338,7 @@ def create_log(log: Log) -> bool:
 def get_all_users() -> Sequence[User]:
     with Session(engine) as session:
         return session.exec(select(User)).all()
+    
+def get_all_logs() -> Sequence[Log]:
+    with Session(engine) as session:
+        return session.exec(select(Log)).all()

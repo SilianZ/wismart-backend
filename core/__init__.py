@@ -375,7 +375,7 @@ def _(request: Request, body: ProductChangeRequest) -> Response:
 
 
 @app.post("/api/product/remove")
-def _(request: Request, body: ProductRemoveRequest):
+def _(request: Request, body: ProductRemoveRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=False, message="未登录。")
@@ -405,7 +405,7 @@ def _(request: Request, body: ProductRemoveRequest):
 
 
 @app.post("/api/product/types/remove")
-def _(request: Request, body: ProductTypeRemoveRequest):
+def _(request: Request, body: ProductTypeRemoveRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=False, message="未登录。")
@@ -423,7 +423,7 @@ def _(request: Request, body: ProductTypeRemoveRequest):
 
 
 @app.post("/api/product/types/new")
-def _(request: Request, body: ProductTypeCreateRequest):
+def _(request: Request, body: ProductTypeCreateRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=False, message="未登录。")
@@ -442,7 +442,7 @@ def _(request: Request, body: ProductTypeCreateRequest):
 
 
 @app.post("/api/product/types/change")
-def _(request: Request, body: ProductTypeChangeRequest):
+def _(request: Request, body: ProductTypeChangeRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=False, message="未登录。")
@@ -463,7 +463,7 @@ def _(request: Request, body: ProductTypeChangeRequest):
 
 
 @app.post("/api/product/buy")
-def _(request: Request, body: ProductBuyRequest):
+def _(request: Request, body: ProductBuyRequest) -> Response:
     if not verify_turnstile_token(body.turnstileToken):
         return Response(success=False, message="请通过人机验证。")
     cookie = request.cookies.get("WISMARTCOOKIE")
@@ -533,7 +533,7 @@ def _(request: Request, body: ProductBuyRequest):
 
 
 @app.post("/api/trade/detail")
-def _(request: Request, body: TradeDetailFetchRequest):
+def _(request: Request, body: TradeDetailFetchRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=False, message="未登录。")
@@ -550,7 +550,7 @@ def _(request: Request, body: TradeDetailFetchRequest):
 
 
 @app.post("/api/trade/change")
-def _(request: Request, body: TradeChangeRequest):
+def _(request: Request, body: TradeChangeRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=False, message="未登录。")
@@ -601,7 +601,7 @@ def _(request: Request, body: TradeChangeRequest):
 
 
 @app.post("/api/user/profile")
-def _(request: Request, body: UserProfileFetchRequest):
+def _(request: Request, body: UserProfileFetchRequest) -> Response:
     cookie = request.cookies.get("WISMARTCOOKIE")
     if not cookie:
         return Response(success=False, message="未登录。")
@@ -618,3 +618,17 @@ def _(request: Request, body: UserProfileFetchRequest):
         "username": user_info.username,
     }
     return Response(success=True, data=data)
+
+@app.get("/api/logs/all")
+def _(request: Request) -> Response:
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return Response(success=False, message="未登录。")
+    login = get_user_login_by_cookie(cookie)
+    user = get_user_by_email(login.email) if login else None
+    if not user:
+        return Response(success=False, message="未登录。")
+    admin = verify_admin_by_email(user.email)
+    if not admin:
+        return Response(success=False, message="无访问权限。")
+    return Response(success=True, data=get_all_logs())
