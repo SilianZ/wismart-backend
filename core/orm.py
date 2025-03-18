@@ -1,6 +1,6 @@
-from sqlmodel import SQLModel, create_engine, Session, select, or_, column
-from sqlmodel import Field
-from typing import Union, Optional, Sequence, Literal
+from sqlmodel import SQLModel, create_engine, Session, select, or_, column, Field, Column
+from sqlalchemy.dialects.mysql import LONGTEXT
+from typing import Union, Optional, Sequence
 from core.env import *
 from pydantic import BaseModel
 from core.classes import *
@@ -75,7 +75,7 @@ class Log(SQLModel, table=True):
     url: str
     method: str
     status: int
-    response: str | None = None
+    response: str = Field(sa_column=Column(LONGTEXT))
     port: int | None = None
 
 
@@ -176,7 +176,6 @@ def get_products(
             if type:
                 query = query.where(Product.type == type)
             if keyword:
-                print(keyword)
                 query = query.filter(
                     or_(
                         column("name").like("%{}%".format(keyword)),
@@ -191,7 +190,6 @@ def get_products(
             )
 
     except Exception as e:
-        print(e)
         return ProductFetchResonse(products=[], maxPage=1, page=1)
 
 
@@ -333,5 +331,6 @@ def create_log(log: Log) -> bool:
             session.commit()
             session.refresh(log)
             return True
-    except Exception:
+    except Exception as e:
+        print(e)
         return False

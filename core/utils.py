@@ -69,7 +69,6 @@ def get_temp_cos_security_token(ext: str) -> dict[str, Any] | None:
         response: dict[str, Any] = sts.get_credential()
         return {"key": key, **response}
     except Exception as e:
-        print(e)
         return None
 
 
