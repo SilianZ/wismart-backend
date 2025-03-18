@@ -478,8 +478,16 @@ def _(request: Request, body: ProductBuyRequest):
         return Response(success=False, message="无效的商品。")
     if product.ownerId == buyer.id:
         return Response(success=False, message="你不能自己购买自己的商品。")
-    if product.stock and product.stock < body.count:
+    if product.stock and product.stock - product.sales < body.count:
         return Response(success=False, message="无效的购买数量。")
+    change_product(
+        ProductChangeRequest(
+            id=product.id or -1,
+            isVerified=product.isVerified,
+            stock=product.stock,
+            sales=product.sales + body.count,
+        )
+    )
     seller = get_user_by_id(product.ownerId)
     if not seller:
         return Response(success=False, message="无效的商品所有者。")
@@ -567,15 +575,16 @@ def _(request: Request, body: TradeChangeRequest):
     product = get_product_by_id(body.id, False)
     if not product:
         return Response(success=False, message="失败。")
-    product.sales += trade.count
-    change_product(
-        ProductChangeRequest(
-            id=product.id or -1,
-            isVerified=product.isVerified,
-            stock=product.stock,
-            sales=product.sales,
+    if body.status == "canceled":
+        product.sales -= trade.count
+        change_product(
+            ProductChangeRequest(
+                id=product.id or -1,
+                isVerified=product.isVerified,
+                stock=product.stock,
+                sales=product.sales,
+            )
         )
-    )
     send_status_change_email(
         "交易状态更新",
         trade.sellerEmail,
