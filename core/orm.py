@@ -334,3 +334,7 @@ def create_log(log: Log) -> bool:
     except Exception as e:
         print(e)
         return False
+    
+def get_all_users() -> Sequence[User]:
+    with Session(engine) as session:
+        return session.exec(select(User)).all()

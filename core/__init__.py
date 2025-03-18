@@ -180,6 +180,23 @@ def _(request: Request) -> JSONResponse:
     response.delete_cookie("WISMARTCOOKIE")
     return response
 
+@app.get("/api/user/all")
+def _(request: Request) -> Response:
+    cookie = request.cookies.get("WISMARTCOOKIE")
+    if not cookie:
+        return Response(success=False, message="未登录。")
+    admin = False
+    if cookie:
+        login = get_user_login_by_cookie(cookie)
+        user = get_user_by_email(login.email) if login else None
+        if not user:
+            return Response(success=False, message="未登录。")
+        admin = verify_admin_by_email(user.email)
+    if not admin:
+        return Response(success=False, message="无访问权限。")
+    db_users = get_all_users()
+    users = {user.id: {"email": user.email, "username": user.username} for user in db_users}
+    return Response(success=True, data=users)
 
 @app.get("/api/user/verify_login")
 def _(request: Request) -> Response:
