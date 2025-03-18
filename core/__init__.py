@@ -44,7 +44,7 @@ class LogMiddleware(BaseHTTPMiddleware):
             url=request.url.path,
             method=request.method,
             status=response.status_code,
-            response=response.body.decode() if hasattr(response, "body") and isinstance(response.body, bytes) else None
+            response=str(response)
         )
         create_log(log)
         return response
