@@ -49,7 +49,8 @@ class LogMiddleware(BaseHTTPMiddleware):
             status=response.status_code,
             response=result.decode()
         )
-        create_log(log)
+        if request.url.path != "/api/logs/all":
+            create_log(log)
         return _Response(
             content=result,
             status_code=response.status_code,
